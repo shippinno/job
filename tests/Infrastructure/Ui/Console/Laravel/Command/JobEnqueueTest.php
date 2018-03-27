@@ -8,11 +8,6 @@ class JobEnqueueTest extends TestCase
 {
     public function test()
     {
-        $jobConsume = new JobEnqueue(
-            new NullContext,
-            $this->serializer(),
-            $this->initEntityManager(),
-            $this->container([FakeJobRunner::class, $jobRunner])
-        );
+
     }
 }
