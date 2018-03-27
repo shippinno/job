@@ -1,0 +1,5 @@
+Shippinno\Job\Application\Job\FakeJob:
+    exclusion_policy: NONE
+    properties:
+        fails:
+            type: boolean

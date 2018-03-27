@@ -1,0 +1,9 @@
+Shippinno\Job\Domain\Model\StoredJob:
+    exclusion_policy: NONE
+    properties:
+        name:
+            type: string
+        body:
+            type: string
+        createdAt:
+            type: DateTimeImmutable

@@ -1,0 +1,9 @@
+Shippinno\Job\Application\Job\Job:
+    exclusion_policy: NONE
+    properties:
+        maxAttempts:
+            type: integer
+        delayReattempt:
+            type: integer
+        createdAt:
+            type: DateTimeImmutable
