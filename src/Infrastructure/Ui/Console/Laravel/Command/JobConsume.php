@@ -100,8 +100,10 @@ class JobConsume extends Command
         $messageBody = json_decode($message->getBody());
         /** @var Job $job */
         $job = $this->serializer->deserialize($messageBody->body, $messageBody->name, 'json');
-        if ($message->getProperty('attempts') > $job->maxAttempts()) {
+        $attempts = $message->getProperty('attempts', 0) + 1;
+        if ($attempts > $job->maxAttempts()) {
             $consumer->reject($message);
+            return;
         }
         /** @var JobRunner $jobRunner */
         $jobRunner = $this->container->make($job->jobRunner());
@@ -109,10 +111,7 @@ class JobConsume extends Command
             $jobRunner->run($job);
             $consumer->acknowledge($message);
         } catch (JobFailedException $e) {
-            $message->setProperty(
-                'attempts',
-                intval($message->getProperty('attempts', 0)) ?: 0
-            );
+            $message->setProperty('attempts', $attempts);
             if ($job->reattemptDelay() > 0) {
                 $message = $this->delayMessage($message, $job->reattemptDelay());
             }
