@@ -21,9 +21,6 @@ abstract class Job
      */
     protected $createdAt;
 
-    /**
-     * @return void
-     */
     public function __construct()
     {
         $this->createdAt = new DateTimeImmutable;

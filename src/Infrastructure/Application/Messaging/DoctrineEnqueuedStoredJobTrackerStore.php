@@ -7,6 +7,9 @@ use Shippinno\Job\Application\Job\StoredJob;
 use Shippinno\Job\Application\Messaging\EnqueuedStoredJobTracker;
 use Shippinno\Job\Application\Messaging\EnqueuedStoredJobTrackerStore;
 
+/**
+ * @method null|EnqueuedStoredJobTracker findOneByTopic(string $topic)
+ */
 class DoctrineEnqueuedStoredJobTrackerStore extends EntityRepository implements EnqueuedStoredJobTrackerStore
 {
     /**
@@ -31,7 +34,6 @@ class DoctrineEnqueuedStoredJobTrackerStore extends EntityRepository implements 
      */
     public function lastEnqueuedStoredJobId(string $topic): ?int
     {
-        /** @var EnqueuedStoredJobTracker $enqueuedStoredJobTracker */
         $enqueuedStoredJobTracker = $this->findOneByTopic($topic);
         if (null === $enqueuedStoredJobTracker) {
             return null;
