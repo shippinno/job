@@ -94,6 +94,9 @@ class JobConsume extends Command
     {
         $this->entityManager->clear();
         $message = $consumer->receive();
+        if (null === $message) {
+            return;
+        }
         $messageBody = json_decode($message->getBody());
         /** @var Job $job */
         $job = $this->serializer->deserialize($messageBody->body, $messageBody->name, 'json');
