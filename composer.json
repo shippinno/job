@@ -14,13 +14,13 @@
     "require": {
         "doctrine/orm": "^2.6",
         "jms/serializer": "^1.11",
-        "enqueue/null": "^0.8.23",
         "queue-interop/queue-interop": "^0.6.1",
         "symfony/yaml": "^3.4",
         "illuminate/console": "^5.5",
         "illuminate/container": "^5.5"
     },
     "require-dev": {
+        "enqueue/null": "^0.8.23",
         "phpunit/phpunit": "^7.0",
         "mockery/mockery": "^1.0",
         "squizlabs/php_codesniffer": "^3.2"
