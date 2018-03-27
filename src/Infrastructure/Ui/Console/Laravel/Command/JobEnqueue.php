@@ -2,6 +2,7 @@
 
 namespace Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command;
 
+use Doctrine\ORM\EntityManager;
 use Illuminate\Console\Command;
 use LogicException;
 use Psr\Log\LoggerAwareTrait;
@@ -24,13 +25,23 @@ class JobEnqueue extends Command
     private $service;
 
     /**
+     * @var EntityManager
+     */
+    private $entityManager;
+
+    /**
      * @param EnqueueStoredJobsService $service
+     * @param EntityManager $entityManager
      * @param LoggerInterface $logger
      */
-    public function __construct(EnqueueStoredJobsService $service, LoggerInterface $logger)
-    {
+    public function __construct(
+        EnqueueStoredJobsService $service,
+        EntityManager $entityManager,
+        LoggerInterface $logger
+    ) {
         parent::__construct();
         $this->service = $service;
+        $this->entityManager = $entityManager;
         $this->setLogger($logger);
     }
 
@@ -41,8 +52,13 @@ class JobEnqueue extends Command
             throw new LogicException('The env JOB_ENQUEUE_TOPIC is not defined');
         }
         while (true) {
+            $this->entityManager->clear();
             try {
-                $this->service->execute($topic);
+                $enqueuedMessagesCount = $this->service->execute($topic);
+                if ($enqueuedMessagesCount > 0) {
+                    $this->logger->debug($enqueuedMessagesCount.' jobs enqueued.');
+                    $this->entityManager->flush();
+                }
             } catch (FailedToEnqueueStoredJobException $e) {
                 $this->logger->alert('Failed to enqueue stored job, retrying in 60 seconds.', [
                     'exception' => $e,
