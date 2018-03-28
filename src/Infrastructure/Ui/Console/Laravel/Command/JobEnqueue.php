@@ -64,7 +64,7 @@ class JobEnqueue extends Command
                         $this->managerRegistry->getManager()->flush();
                     }
                     $this->logger->debug(sprintf('%d jobs enqueued.'), $enqueuedMessagesCount);
-                    $this->info(sprintf('%d jobs enqueued.'), $enqueuedMessagesCount);
+                    $this->info(sprintf('%d jobs enqueued.', $enqueuedMessagesCount));
                 }
             } catch (FailedToEnqueueStoredJobException $e) {
                 $this->logger->alert('Failed to enqueue stored job, retrying in 60 seconds.', [
