@@ -3,7 +3,7 @@ Shippinno\Job\Domain\Model\Job:
     properties:
         maxAttempts:
             type: integer
-        delayReattempt:
+        reattemptDelay:
             type: integer
         createdAt:
             type: DateTimeImmutable

@@ -122,7 +122,7 @@ class JobConsume extends Command
                 $message = $this->delayMessage($message, $job->reattemptDelay());
             }
             $consumer->reject($message, true);
-            $this->info('Job failed, acknowledged');
+            $this->info('Job failed, requeued in %d seconds', $job->reattemptDelay());
         } finally {
             if (null !== $this->managerRegistry) {
                 $this->managerRegistry->getManager()->flush();
