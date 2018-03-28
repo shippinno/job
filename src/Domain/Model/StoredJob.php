@@ -45,4 +45,20 @@ class StoredJob
     {
         return $this->id;
     }
+
+    /**
+     * @return string
+     */
+    public function name(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return string
+     */
+    public function body(): string
+    {
+        return $this->body;
+    }
 }

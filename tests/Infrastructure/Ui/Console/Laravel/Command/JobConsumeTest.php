@@ -7,26 +7,36 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
 use Enqueue\Null\NullContext;
 use Enqueue\Null\NullMessage;
-use Illuminate\Container\Container;
 use Interop\Queue\PsrConsumer;
-use JMS\Serializer\SerializerBuilder;
-use JMS\Serializer\Tests\Serializer\Doctrine\SimpleManagerRegistry;
 use Mockery;
 use ReflectionClass;
+use Shippinno\Job\Application\Job\JobRunnerRegistry;
+use Shippinno\Job\Domain\Model\JobSerializer;
+use Shippinno\Job\Domain\Model\StoredJobSerializer;
 use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobConsume;
 use Shippinno\Job\Test\Application\Job\FakeJobRunner;
 use Shippinno\Job\Test\Domain\Model\FakeJob;
 use Shippinno\Job\Domain\Model\StoredJob;
-use Shippinno\Job\Infrastructure\Serialization\JMS\BuildsSerializer;
+use Shippinno\Job\Test\Domain\Model\FakeJobSerializer;
+use Shippinno\Job\Test\Domain\Model\FakeStoredJobSerializer;
 use Shippinno\Job\Test\TestCase;
 
 class JobConsumeTest extends TestCase
 {
-    use BuildsSerializer;
+    /**
+     * @var JobSerializer
+     */
+    private $jobSerializer;
+
+    /**
+     * @var StoredJobSerializer
+     */
+    private $storedJobSerializer;
 
     public function setUp()
     {
-        $this->buildSerializer($this->serializerBuilder());
+        $this->jobSerializer = new FakeJobSerializer;
+        $this->storedJobSerializer = new FakeStoredJobSerializer;
     }
 
     public function testItShouldAcknowledgeWhenSucceeded()
@@ -44,16 +54,11 @@ class JobConsumeTest extends TestCase
 //            ])
             ->once();
 
-        $jobRunner = Mockery::mock(FakeJobRunner::class);
-        $jobRunner
-            ->shouldReceive('run')
-//            ->withArgs()
-            ->once();
-
         $jobConsume = new JobConsume(
             new NullContext,
-            $this->serializerBuilder(),
-            $this->container([FakeJobRunner::class, $jobRunner]),
+            $this->jobSerializer,
+            $this->storedJobSerializer,
+            $this->jobRunnerRegistry([FakeJob::class => new FakeJobRunner]),
             $this->mockManagerRegistry()
         );
 
@@ -79,17 +84,12 @@ class JobConsumeTest extends TestCase
 //                })
 //            ])
             ->once();
-
-        $jobRunner = Mockery::mock(FakeJobRunner::class);
-        $jobRunner
-            ->shouldReceive('run')
-//            ->withArgs()
-            ->once();
-
+        
         $jobConsume = new JobConsume(
             new NullContext,
-            $this->serializerBuilder(),
-            $this->container([FakeJobRunner::class, $jobRunner]),
+            $this->jobSerializer,
+            $this->storedJobSerializer,
+            $this->jobRunnerRegistry([FakeJob::class => new FakeJobRunner]),
             $this->mockManagerRegistry()
         );
 
@@ -119,8 +119,9 @@ class JobConsumeTest extends TestCase
 
         $jobConsume = new JobConsume(
             new NullContext,
-            $this->serializerBuilder(),
-            $this->container(),
+            $this->jobSerializer,
+            $this->storedJobSerializer,
+            $this->jobRunnerRegistry(),
             $this->mockManagerRegistry()
         );
 
@@ -152,35 +153,27 @@ class JobConsumeTest extends TestCase
     }
 
     /**
-     * @param array $bindings
-     * @return Container
-     */
-    private function container(array $bindings = []): Container
-    {
-        $container = new Container();
-        foreach ($bindings as $abstract => $concrete) {
-            $container->bind($abstract, $concrete);
-        }
-
-        return $container;
-    }
-
-    /**
      * @param bool $failsToConsume
      * @return NullMessage
      */
     private function createMessage(bool $failsToConsume = false): NullMessage
     {
-        $message = new NullMessage($this->serializer->serialize(
+        $message = new NullMessage($this->storedJobSerializer->serialize(
             new StoredJob(
                 FakeJob::class,
-                json_encode(['fails' => $failsToConsume]),
+                $this->jobSerializer->serialize(new FakeJob($failsToConsume)),
                 new \DateTimeImmutable()
-            ),
-            'json'
+            )
         ));
 
         return $message;
     }
 
+    private function jobRunnerRegistry(array $jobRunners = []): JobRunnerRegistry
+    {
+        $jobRunnerRegistry = new JobRunnerRegistry();
+        $jobRunnerRegistry->register($jobRunners);
+
+        return $jobRunnerRegistry;
+    }
 }

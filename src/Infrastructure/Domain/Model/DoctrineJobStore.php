@@ -2,27 +2,30 @@
 
 namespace Shippinno\Job\Infrastructure\Domain\Model;
 
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use JMS\Serializer\SerializerBuilder;
 use Shippinno\Job\Domain\Model\Job;
+use Shippinno\Job\Domain\Model\JobSerializer;
 use Shippinno\Job\Domain\Model\JobStore;
 use Shippinno\Job\Domain\Model\StoredJob;
-use Shippinno\Job\Infrastructure\Serialization\JMS\BuildsSerializer;
 
 class DoctrineJobStore extends EntityRepository implements JobStore
 {
-    use BuildsSerializer;
+    /**
+     * @var JobSerializer
+     */
+    private $jobSerializer;
 
     /**
-     * @param $em
+     * @param EntityManager $em
      * @param ClassMetadata $class
-     * @param SerializerBuilder $serializerBuilder
+     * @param JobSerializer $jobSerializer
      */
-    public function __construct($em, ClassMetadata $class, SerializerBuilder $serializerBuilder)
+    public function __construct(EntityManager $em, ClassMetadata $class, JobSerializer $jobSerializer)
     {
         parent::__construct($em, $class);
-        $this->buildSerializer($serializerBuilder);
+        $this->jobSerializer = $jobSerializer;
     }
 
     /**
@@ -30,12 +33,12 @@ class DoctrineJobStore extends EntityRepository implements JobStore
      */
     public function append(Job $job): void
     {
-        $storedEvent = new StoredJob(
+        $storedJob = new StoredJob(
             get_class($job),
-            $this->serializer->serialize($job, 'json'),
+            $this->jobSerializer->serialize($job),
             $job->createdAt()
         );
-        $this->getEntityManager()->persist($storedEvent);
+        $this->getEntityManager()->persist($storedJob);
     }
 
     /**

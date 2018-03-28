@@ -6,7 +6,9 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
 use JMS\Serializer\SerializerBuilder;
+use Mockery;
 use PHPUnit\Framework\TestCase;
+use Shippinno\Job\Domain\Model\JobSerializer;
 use Shippinno\Job\Domain\Model\StoredJob;
 use Shippinno\Job\Infrastructure\Domain\Model\DoctrineJobStore;
 
@@ -25,10 +27,12 @@ class DoctrineJobStoreTest extends TestCase
     public function setUp()
     {
         $this->entityManager = $this->initEntityManager();
+        $jobSerializer = Mockery::mock(JobSerializer::class);
+        $jobSerializer->shouldReceive(['serialize' => '']);
         $this->jobStore = new DoctrineJobStore(
             $this->entityManager,
             $this->entityManager->getClassMetaData(StoredJob::class),
-            SerializerBuilder::create()
+            $jobSerializer
         );
     }
 
@@ -58,7 +62,7 @@ class DoctrineJobStoreTest extends TestCase
         $entityManager = EntityManager::create(
             ['url' => 'sqlite:///:memory:'],
             Setup::createXMLMetadataConfiguration(
-                [__DIR__ . '/../../Persistence/Doctrine/Mapping'],
+                [__DIR__ . '/../../Infrastructure/Persistence/Doctrine/Mapping'],
                 $devMode = true
             )
         );

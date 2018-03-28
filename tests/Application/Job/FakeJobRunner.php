@@ -3,9 +3,9 @@
 namespace Shippinno\Job\Test\Application\Job;
 
 use Shippinno\Job\Application\Job\JobRunner;
-use Shippinno\Job\Domain\Model\FakeJob;
 use Shippinno\Job\Domain\Model\Job;
 use Shippinno\Job\Domain\Model\JobFailedException;
+use Shippinno\Job\Test\Domain\Model\FakeJob;
 
 class FakeJobRunner extends JobRunner
 {

@@ -28,12 +28,4 @@ class FakeJob extends Job
     {
         return $this->fails;
     }
-
-    /**
-     * @return string
-     */
-    public function jobRunner(): string
-    {
-        return FakeJobRunner::class;
-    }
 }

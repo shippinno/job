@@ -65,9 +65,4 @@ abstract class Job
     {
         return $this->createdAt;
     }
-
-    /**
-     * @return string
-     */
-    abstract public function jobRunner(): string;
 }

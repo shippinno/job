@@ -3,24 +3,21 @@
 namespace Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command;
 
 use Doctrine\Common\Persistence\ManagerRegistry;
-use Doctrine\ORM\EntityManager;
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Container\Container;
 use Interop\Queue\PsrConsumer;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
-use JMS\Serializer\SerializerBuilder;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Shippinno\Job\Application\Job\JobRunner;
+use Shippinno\Job\Application\Job\JobRunnerRegistry;
 use Shippinno\Job\Domain\Model\Job;
 use Shippinno\Job\Domain\Model\JobFailedException;
-use Shippinno\Job\Infrastructure\Serialization\JMS\BuildsSerializer;
+use Shippinno\Job\Domain\Model\JobSerializer;
+use Shippinno\Job\Domain\Model\StoredJobSerializer;
 
 class JobConsume extends Command
 {
-    use BuildsSerializer;
     use LoggerAwareTrait;
 
     /**
@@ -34,9 +31,19 @@ class JobConsume extends Command
     private $context;
 
     /**
-     * @var Container
+     * @var JobSerializer
      */
-    private $container;
+    private $jobSerializer;
+
+    /**
+     * @var StoredJobSerializer
+     */
+    private $storedJobSerializer;
+
+    /**
+     * @var JobRunnerRegistry
+     */
+    private $jobRunnerRegistry;
 
     /**
      * @var ManagerRegistry|null
@@ -45,22 +52,25 @@ class JobConsume extends Command
 
     /**
      * @param PsrContext $context
-     * @param SerializerBuilder $serializerBuilder
-     * @param Container $container
+     * @param JobSerializer $jobSerializer
+     * @param StoredJobSerializer $storedJobSerializer
+     * @param JobRunnerRegistry $jobRunnerRegistry
      * @param ManagerRegistry|null $managerRegistry
-     * @param LoggerInterface $logger
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         PsrContext $context,
-        SerializerBuilder $serializerBuilder,
-        Container $container,
+        JobSerializer $jobSerializer,
+        StoredJobSerializer $storedJobSerializer,
+        JobRunnerRegistry $jobRunnerRegistry,
         ManagerRegistry $managerRegistry = null,
         LoggerInterface $logger = null
     ) {
         parent::__construct();
         $this->context = $context;
-        $this->buildSerializer($serializerBuilder);
-        $this->container = $container;
+        $this->jobSerializer = $jobSerializer;
+        $this->storedJobSerializer = $storedJobSerializer;
+        $this->jobRunnerRegistry = $jobRunnerRegistry;
         $this->managerRegistry = $managerRegistry;
         $this->setLogger(null !== $logger ? $logger : new NullLogger);
     }
@@ -101,28 +111,27 @@ class JobConsume extends Command
         if (null === $message) {
             return;
         }
-        $messageBody = json_decode($message->getBody());
+        $storedJob = $this->storedJobSerializer->deserialize($message->getBody());
         /** @var Job $job */
-        $job = $this->serializer->deserialize($messageBody->body, $messageBody->name, 'json');
+        $job = $this->jobSerializer->deserialize($storedJob->body(), $storedJob->name());
         $attempts = $message->getProperty('attempts', 0) + 1;
         if ($attempts > $job->maxAttempts()) {
             $consumer->reject($message);
-            $this->info(sprintf('Job exceeded max attempts (%d), rejected', $job->maxAttempts()));
+//            $this->info(sprintf('Job exceeded max attempts (%d), rejected', $job->maxAttempts()));
             return;
         }
-        /** @var JobRunner $jobRunner */
-        $jobRunner = $this->container->make($job->jobRunner());
+        $jobRunner =$this->jobRunnerRegistry->get(get_class($job));
         try {
             $jobRunner->run($job);
             $consumer->acknowledge($message);
-            $this->info('Job consumed successfuly, acknowledged');
+//            $this->info('Job consumed successfuly, acknowledged');
         } catch (JobFailedException $e) {
             $message->setProperty('attempts', $attempts);
             if ($job->reattemptDelay() > 0) {
                 $message = $this->delayMessage($message, $job->reattemptDelay());
             }
             $consumer->reject($message, true);
-            $this->info(sprintf('Job failed, requeued in %d seconds', $job->reattemptDelay()));
+//            $this->info(sprintf('Job failed, requeued in %d seconds', $job->reattemptDelay()));
         } finally {
             if (null !== $this->managerRegistry) {
                 $this->managerRegistry->getManager()->flush();
