@@ -63,7 +63,7 @@ class JobEnqueue extends Command
                     if (null !== $this->managerRegistry) {
                         $this->managerRegistry->getManager()->flush();
                     }
-                    $this->logger->debug(sprintf('%d jobs enqueued.'), $enqueuedMessagesCount);
+                    $this->logger->debug(sprintf('%d jobs enqueued.', $enqueuedMessagesCount));
                     $this->info(sprintf('%d jobs enqueued.', $enqueuedMessagesCount));
                 }
             } catch (FailedToEnqueueStoredJobException $e) {
