@@ -2,6 +2,7 @@
 
 namespace Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command;
 
+use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManager;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Container\Container;
@@ -29,32 +30,32 @@ class JobConsume extends Command
     private $context;
 
     /**
-     * @var EntityManager
-     */
-    private $entityManager;
-
-    /**
      * @var Container
      */
     private $container;
 
     /**
+     * @var ManagerRegistry|null
+     */
+    private $managerRegistry;
+
+    /**
      * @param PsrContext $context
      * @param SerializerBuilder $serializerBuilder
-     * @param EntityManager $entityManager
      * @param Container $container
+     * @param ManagerRegistry|null $managerRegistry
      */
     public function __construct(
         PsrContext $context,
         SerializerBuilder $serializerBuilder,
-        EntityManager $entityManager,
-        Container $container
+        Container $container,
+        ManagerRegistry $managerRegistry = null
     ) {
         parent::__construct();
         $this->context = $context;
         $this->buildSerializer($serializerBuilder);
-        $this->entityManager = $entityManager;
         $this->container = $container;
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**
@@ -83,13 +84,12 @@ class JobConsume extends Command
 
     /**
      * @param PsrConsumer $consumer
-     * @throws \Doctrine\Common\Persistence\Mapping\MappingException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
      */
     protected function consume(PsrConsumer $consumer)
     {
-        $this->entityManager->clear();
+        if (null !== $this->managerRegistry) {
+            $this->managerRegistry->getManager()->clear();
+        }
         $message = $consumer->receive();
         if (null === $message) {
             return;
@@ -114,7 +114,9 @@ class JobConsume extends Command
             }
             $consumer->reject($message, true);
         } finally {
-            $this->entityManager->flush();
+            if (null !== $this->managerRegistry) {
+                $this->managerRegistry->getManager()->flush();
+            }
         }
     }
 

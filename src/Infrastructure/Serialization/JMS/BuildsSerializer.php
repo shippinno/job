@@ -18,7 +18,7 @@ trait BuildsSerializer
     protected function buildSerializer(SerializerBuilder $serializerBuilder): void
     {
         $this->serializer = $serializerBuilder
-            ->addMetadataDir(__DIR__ . '/Config','Shippinno\\Job')
+            ->addMetadataDir(__DIR__ . '/Config', 'Shippinno\\Job')
             ->build();
     }
 }

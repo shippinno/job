@@ -2,6 +2,7 @@
 
 namespace Shippinno\Job\Test\Infrastructure\Ui\Console\Laravel\Command;
 
+use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
 use Enqueue\Null\NullContext;
@@ -9,6 +10,7 @@ use Enqueue\Null\NullMessage;
 use Illuminate\Container\Container;
 use Interop\Queue\PsrConsumer;
 use JMS\Serializer\SerializerBuilder;
+use JMS\Serializer\Tests\Serializer\Doctrine\SimpleManagerRegistry;
 use Mockery;
 use ReflectionClass;
 use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobConsume;
@@ -51,8 +53,8 @@ class JobConsumeTest extends TestCase
         $jobConsume = new JobConsume(
             new NullContext,
             $this->serializerBuilder(),
-            $this->initEntityManager(),
-            $this->container([FakeJobRunner::class, $jobRunner])
+            $this->container([FakeJobRunner::class, $jobRunner]),
+            $this->mockManagerRegistry()
         );
 
         $reflection = new ReflectionClass($jobConsume);
@@ -87,8 +89,8 @@ class JobConsumeTest extends TestCase
         $jobConsume = new JobConsume(
             new NullContext,
             $this->serializerBuilder(),
-            $this->initEntityManager(),
-            $this->container([FakeJobRunner::class, $jobRunner])
+            $this->container([FakeJobRunner::class, $jobRunner]),
+            $this->mockManagerRegistry()
         );
 
         $reflection = new ReflectionClass($jobConsume);
@@ -118,8 +120,8 @@ class JobConsumeTest extends TestCase
         $jobConsume = new JobConsume(
             new NullContext,
             $this->serializerBuilder(),
-            $this->initEntityManager(),
-            $this->container()
+            $this->container(),
+            $this->mockManagerRegistry()
         );
 
         $reflection = new ReflectionClass($jobConsume);
@@ -130,10 +132,6 @@ class JobConsumeTest extends TestCase
         $this->assertTrue(true);
     }
 
-    /**
-     * @return EntityManager
-     * @throws \Doctrine\ORM\ORMException
-     */
     protected function initEntityManager()
     {
         return EntityManager::create(
@@ -143,6 +141,14 @@ class JobConsumeTest extends TestCase
                 $devMode = true
             )
         );
+    }
+
+    protected function mockManagerRegistry()
+    {
+        $managerRegistry = Mockery::mock(ManagerRegistry::class);
+        $managerRegistry->shouldReceive(['getManager' => $this->initEntityManager()]);
+
+        return $managerRegistry;
     }
 
     /**
