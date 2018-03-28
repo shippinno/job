@@ -10,6 +10,9 @@ use Interop\Queue\PsrConsumer;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use JMS\Serializer\SerializerBuilder;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Shippinno\Job\Application\Job\JobRunner;
 use Shippinno\Job\Domain\Model\Job;
 use Shippinno\Job\Domain\Model\JobFailedException;
@@ -18,6 +21,7 @@ use Shippinno\Job\Infrastructure\Serialization\JMS\BuildsSerializer;
 class JobConsume extends Command
 {
     use BuildsSerializer;
+    use LoggerAwareTrait;
 
     /**
      * {@inheritdoc}
@@ -44,18 +48,21 @@ class JobConsume extends Command
      * @param SerializerBuilder $serializerBuilder
      * @param Container $container
      * @param ManagerRegistry|null $managerRegistry
+     * @param LoggerInterface $logger
      */
     public function __construct(
         PsrContext $context,
         SerializerBuilder $serializerBuilder,
         Container $container,
-        ManagerRegistry $managerRegistry = null
+        ManagerRegistry $managerRegistry = null,
+        LoggerInterface $logger
     ) {
         parent::__construct();
         $this->context = $context;
         $this->buildSerializer($serializerBuilder);
         $this->container = $container;
         $this->managerRegistry = $managerRegistry;
+        $this->setLogger(null !== $logger ? $logger : new NullLogger);
     }
 
     /**
@@ -100,6 +107,7 @@ class JobConsume extends Command
         $attempts = $message->getProperty('attempts', 0) + 1;
         if ($attempts > $job->maxAttempts()) {
             $consumer->reject($message);
+            $this->info(sprintf('Job exceeded max attempts (%d), rejected'), $job->maxAttempts());
             return;
         }
         /** @var JobRunner $jobRunner */
@@ -107,12 +115,14 @@ class JobConsume extends Command
         try {
             $jobRunner->run($job);
             $consumer->acknowledge($message);
+            $this->info('Job consumed successfuly, acknowledged');
         } catch (JobFailedException $e) {
             $message->setProperty('attempts', $attempts);
             if ($job->reattemptDelay() > 0) {
                 $message = $this->delayMessage($message, $job->reattemptDelay());
             }
             $consumer->reject($message, true);
+            $this->info('Job failed, acknowledged');
         } finally {
             if (null !== $this->managerRegistry) {
                 $this->managerRegistry->getManager()->flush();

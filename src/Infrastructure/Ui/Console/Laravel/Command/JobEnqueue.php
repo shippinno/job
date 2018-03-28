@@ -60,10 +60,11 @@ class JobEnqueue extends Command
             try {
                 $enqueuedMessagesCount = $this->service->execute($topic);
                 if ($enqueuedMessagesCount > 0) {
-                    $this->logger->debug($enqueuedMessagesCount.' jobs enqueued.');
                     if (null !== $this->managerRegistry) {
                         $this->managerRegistry->getManager()->flush();
                     }
+                    $this->logger->debug(sprintf('%d jobs enqueued.'), $enqueuedMessagesCount);
+                    $this->info(sprintf('%d jobs enqueued.'), $enqueuedMessagesCount);
                 }
             } catch (FailedToEnqueueStoredJobException $e) {
                 $this->logger->alert('Failed to enqueue stored job, retrying in 60 seconds.', [
