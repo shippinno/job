@@ -1,8 +1,9 @@
 <?php
 
-namespace Shippinno\Job\Application\Job;
+namespace Shippinno\Job\Test\Domain\Model;
 
 use DateTimeImmutable;
+use Shippinno\Job\Domain\Model\StoredJob;
 
 class FakeStoredJob extends StoredJob
 {

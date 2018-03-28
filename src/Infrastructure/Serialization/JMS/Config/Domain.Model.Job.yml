@@ -1,4 +1,4 @@
-Shippinno\Job\Application\Job\Job:
+Shippinno\Job\Domain\Model\Job:
     exclusion_policy: NONE
     properties:
         maxAttempts:

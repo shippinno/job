@@ -1,7 +1,10 @@
 <?php
 
-namespace Shippinno\Job\Application\Job;
+namespace Shippinno\Job\Test\Application\Job;
 
+use Shippinno\Job\Application\Job\JobRunner;
+use Shippinno\Job\Domain\Model\FakeJob;
+use Shippinno\Job\Domain\Model\Job;
 use Shippinno\Job\Domain\Model\JobFailedException;
 
 class FakeJobRunner extends JobRunner

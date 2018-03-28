@@ -1,6 +1,6 @@
 <?php
 
-namespace Shippinno\Job\Application\Job;
+namespace Shippinno\Job\Domain\Model;
 
 interface JobStore
 {

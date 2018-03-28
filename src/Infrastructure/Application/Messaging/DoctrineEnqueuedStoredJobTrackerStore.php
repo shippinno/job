@@ -3,7 +3,7 @@
 namespace Shippinno\Job\Infrastructure\Application\Messaging;
 
 use Doctrine\ORM\EntityRepository;
-use Shippinno\Job\Application\Job\StoredJob;
+use Shippinno\Job\Domain\Model\StoredJob;
 use Shippinno\Job\Application\Messaging\EnqueuedStoredJobTracker;
 use Shippinno\Job\Application\Messaging\EnqueuedStoredJobTrackerStore;
 

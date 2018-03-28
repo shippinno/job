@@ -1,19 +1,18 @@
 <?php
 
-namespace Shippinno\Job\Infrastructure\Application\Messaging;
+namespace Shippinno\Job\Test\Infrastructure\Application\Messaging;
 
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
+use JMS\Serializer\SerializerBuilder;
 use Mockery;
 use PHPUnit\Framework\TestCase;
-use Shippinno\Job\Application\Job\FakeJob;
-use Shippinno\Job\Application\Job\StoredJob;
+use Shippinno\Job\Domain\Model\StoredJob;
 use Shippinno\Job\Application\Messaging\EnqueuedStoredJobTracker;
 use Shippinno\Job\Application\Messaging\EnqueuedStoredJobTrackerStore;
-use Shippinno\Job\Infrastructure\Application\Job\DoctrineJobStore;
-
+use Shippinno\Job\Infrastructure\Application\Messaging\DoctrineEnqueuedStoredJobTrackerStore;
+use Shippinno\Job\Infrastructure\Domain\Model\DoctrineJobStore;
 
 class DoctrineEnqueuedStoredJobTrackerStoreTest extends TestCase
 {
@@ -80,7 +79,8 @@ class DoctrineEnqueuedStoredJobTrackerStoreTest extends TestCase
     {
         return new DoctrineJobStore(
             $this->entityManager,
-            $this->entityManager->getClassMetaData(StoredJob::class)
+            $this->entityManager->getClassMetaData(StoredJob::class),
+            SerializerBuilder::create()
         );
     }
 

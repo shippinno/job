@@ -1,6 +1,9 @@
 <?php
 
-namespace Shippinno\Job\Application\Job;
+namespace Shippinno\Job\Test\Domain\Model;
+
+use Shippinno\Job\Test\Application\Job\FakeJobRunner;
+use Shippinno\Job\Domain\Model\Job;
 
 class FakeJob extends Job
 {

@@ -2,7 +2,7 @@
 
 namespace Shippinno\Job\Application\Messaging;
 
-use Shippinno\Job\Application\Job\StoredJob;
+use Shippinno\Job\Domain\Model\StoredJob;
 
 interface EnqueuedStoredJobTrackerStore
 {

@@ -1,32 +1,31 @@
 <?php
 
-namespace Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command;
+namespace Shippinno\Job\Test\Infrastructure\Ui\Console\Laravel\Command;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
 use Enqueue\Null\NullContext;
 use Enqueue\Null\NullMessage;
-use Enqueue\Null\NullQueue;
 use Illuminate\Container\Container;
 use Interop\Queue\PsrConsumer;
-use Interop\Queue\PsrContext;
-use Interop\Queue\PsrMessage;
-use Interop\Queue\PsrQueue;
-use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerBuilder;
 use Mockery;
-use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use Shippinno\Job\Application\Job\FakeJob;
-use Shippinno\Job\Application\Job\FakeJobRunner;
+use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobConsume;
+use Shippinno\Job\Test\Application\Job\FakeJobRunner;
+use Shippinno\Job\Test\Domain\Model\FakeJob;
 use Shippinno\Job\Domain\Model\StoredJob;
+use Shippinno\Job\Infrastructure\Serialization\JMS\BuildsSerializer;
+use Shippinno\Job\Test\TestCase;
 
 class JobConsumeTest extends TestCase
 {
-    /**
-     * @var Serializer
-     */
-    private $serializer;
+    use BuildsSerializer;
+
+    public function setUp()
+    {
+        $this->buildSerializer($this->serializerBuilder());
+    }
 
     public function testItShouldAcknowledgeWhenSucceeded()
     {
@@ -51,7 +50,7 @@ class JobConsumeTest extends TestCase
 
         $jobConsume = new JobConsume(
             new NullContext,
-            $this->serializer(),
+            $this->serializerBuilder(),
             $this->initEntityManager(),
             $this->container([FakeJobRunner::class, $jobRunner])
         );
@@ -87,7 +86,7 @@ class JobConsumeTest extends TestCase
 
         $jobConsume = new JobConsume(
             new NullContext,
-            $this->serializer(),
+            $this->serializerBuilder(),
             $this->initEntityManager(),
             $this->container([FakeJobRunner::class, $jobRunner])
         );
@@ -118,7 +117,7 @@ class JobConsumeTest extends TestCase
 
         $jobConsume = new JobConsume(
             new NullContext,
-            $this->serializer(),
+            $this->serializerBuilder(),
             $this->initEntityManager(),
             $this->container()
         );
@@ -130,75 +129,6 @@ class JobConsumeTest extends TestCase
 
         $this->assertTrue(true);
     }
-//
-//    public function test()
-//    {
-//        $messageBodyToSucceed = $this->serializer()->serialize(
-//            new StoredJob(
-//                FakeJob::class,
-//                '{"fails":false}',
-//                new \DateTimeImmutable()
-//            ),
-//            'json'
-//        );
-//        $messageBodyToFail = $this->serializer()->serialize(
-//            new StoredJob(
-//                FakeJob::class,
-//                '{"fails":true}',
-//                new \DateTimeImmutable()
-//            ),
-//            'json'
-//        );
-//        $messageToSucceed = new NullMessage($messageBodyToSucceed);
-//        $messageToFail = new NullMessage($messageBodyToFail);
-//
-//        $consumer = Mockery::mock(PsrConsumer::class);
-//        $consumer
-//            ->shouldReceive('receive')
-//            ->andReturn($messageToSucceed, $messageToFail)
-//            ->shouldReceive('acknowledge')
-////            ->withArgs([
-////                Mockery::on(function (NullMessage $message) use ($messageBodyToSucceed) {
-////                    return $message->getBody() === $messageBodyToSucceed;
-////                })
-////            ])
-//            ->once()
-//            ->shouldReceive('reject')
-////            ->withArgs([
-////                Mockery::on(function (NullMessage $message) use ($messageBodyToFail) {
-////                    return $message->getBody() === $messageBodyToFail && 1 === $message->getProperty('attempts');
-////                }),
-////                true
-////            ])
-//            ->once();
-//
-//        $context = Mockery::mock(PsrContext::class);
-//        $context->shouldReceive([
-//            'createQueue' => new NullQueue('test'),
-//            'createConsumer' => $consumer,
-//        ]);
-//
-//        $jobRunner = Mockery::mock(FakeJobRunner::class);
-//        $jobRunner
-//            ->shouldReceive('run')
-////            ->withArgs()
-//            ->twice();
-//
-//        $jobConsume = new JobConsume(
-//            $context,
-//            $this->serializer(),
-//            $this->initEntityManager(),
-//            $this->container([FakeJobRunner::class, $jobRunner])
-//        );
-//
-//        $reflection = new ReflectionClass($jobConsume);
-//        $method = $reflection->getMethod('consume');
-//        $method->setAccessible(true);
-//        $method->invokeArgs($jobConsume, [$consumer]);
-//        $method->invokeArgs($jobConsume, [$consumer]);
-//
-//        $this->assertTrue(true);
-//    }
 
     /**
      * @return EntityManager
@@ -213,21 +143,6 @@ class JobConsumeTest extends TestCase
                 $devMode = true
             )
         );
-    }
-
-    /**
-     * @return Serializer
-     */
-    private function serializer(): Serializer
-    {
-        if (null === $this->serializer) {
-            $this->serializer =
-                SerializerBuilder::create()
-                    ->addMetadataDir(__DIR__.'/../../../../../Infrastructure/Serialization/JMS/Config')
-                    ->build();
-        }
-
-        return $this->serializer;
     }
 
     /**
@@ -250,7 +165,7 @@ class JobConsumeTest extends TestCase
      */
     private function createMessage(bool $failsToConsume = false): NullMessage
     {
-        $message = new NullMessage($this->serializer()->serialize(
+        $message = new NullMessage($this->serializer->serialize(
             new StoredJob(
                 FakeJob::class,
                 json_encode(['fails' => $failsToConsume]),

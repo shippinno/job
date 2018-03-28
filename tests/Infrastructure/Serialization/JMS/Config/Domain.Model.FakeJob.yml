@@ -1,4 +1,4 @@
-Shippinno\Job\Application\Job\FakeJob:
+Shippinno\Job\Test\Domain\Model\FakeJob:
     exclusion_policy: NONE
     properties:
         fails:

@@ -4,20 +4,20 @@ namespace Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command;
 
 use Doctrine\ORM\EntityManager;
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Console\Application;
 use Illuminate\Contracts\Container\Container;
 use Interop\Queue\PsrConsumer;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
-use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerBuilder;
-use Shippinno\Job\Application\Job\Job;
 use Shippinno\Job\Application\Job\JobRunner;
-use Shippinno\Job\Application\Job\StoredJob;
+use Shippinno\Job\Domain\Model\Job;
 use Shippinno\Job\Domain\Model\JobFailedException;
+use Shippinno\Job\Infrastructure\Serialization\JMS\BuildsSerializer;
 
 class JobConsume extends Command
 {
+    use BuildsSerializer;
+
     /**
      * {@inheritdoc}
      */
@@ -27,11 +27,6 @@ class JobConsume extends Command
      * @var PsrContext
      */
     private $context;
-
-    /**
-     * @var Serializer
-     */
-    private $serializer;
 
     /**
      * @var EntityManager
@@ -45,19 +40,19 @@ class JobConsume extends Command
 
     /**
      * @param PsrContext $context
-     * @param Serializer $serializer
+     * @param SerializerBuilder $serializerBuilder
      * @param EntityManager $entityManager
      * @param Container $container
      */
     public function __construct(
         PsrContext $context,
-        Serializer $serializer,
+        SerializerBuilder $serializerBuilder,
         EntityManager $entityManager,
         Container $container
     ) {
         parent::__construct();
         $this->context = $context;
-        $this->serializer = $serializer;
+        $this->buildSerializer($serializerBuilder);
         $this->entityManager = $entityManager;
         $this->container = $container;
     }
@@ -101,7 +96,7 @@ class JobConsume extends Command
         }
         $messageBody = json_decode($message->getBody());
         /** @var Job $job */
-        $job = $this->serializer()->deserialize($messageBody->body, $messageBody->name, 'json');
+        $job = $this->serializer->deserialize($messageBody->body, $messageBody->name, 'json');
         $attempts = $message->getProperty('attempts', 0) + 1;
         if ($attempts > $job->maxAttempts()) {
             $consumer->reject($message);
@@ -135,27 +130,5 @@ class JobConsume extends Command
         }
 
         return $message;
-    }
-
-    /**
-     * @return Serializer
-     */
-    protected function serializer(): Serializer
-    {
-        if (null === $this->serializer) {
-            $this->serializer =
-                SerializerBuilder::create()
-                    ->addMetadataDir(
-                        __DIR__.'/../../../../Serialization/JMS/Config',
-                        'Shippinno\\Jobbb\\'
-                    )
-                    ->setCacheDir(__DIR__.'/../../../var/cache/jms-serializer')
-                    ->build();
-
-        }
-
-        var_dump($this->serializer->getMetadataFactory()->getMetadataForClass(StoredJob::class)); exit;
-
-        return $this->serializer;
     }
 }

@@ -3,7 +3,7 @@
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
                           http://raw.github.com/doctrine/doctrine2/master/doctrine-mapping.xsd">
-    <entity name="Shippinno\Job\Application\Job\StoredJob" table="jobs">
+    <entity name="Shippinno\Job\Domain\Model\StoredJob" table="jobs">
         <id name="id" type="integer"><generator/></id>
         <field name="name"/>
         <field name="body" type="text"/>

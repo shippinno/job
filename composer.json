@@ -8,7 +8,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Shippinno\\Job\\": "tests/"
+            "Shippinno\\Job\\Test\\": "tests/"
         }
     },
     "require": {

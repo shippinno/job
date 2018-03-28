@@ -9,8 +9,8 @@ use Interop\Queue\PsrProducer;
 use Interop\Queue\PsrTopic;
 use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerBuilder;
-use Shippinno\Job\Application\Job\StoredJob;
-use Shippinno\Job\Application\Job\JobStore;
+use Shippinno\Job\Domain\Model\StoredJob;
+use Shippinno\Job\Domain\Model\JobStore;
 use Shippinno\Job\Domain\Model\FailedToEnqueueStoredJobException;
 
 class EnqueueStoredJobsService

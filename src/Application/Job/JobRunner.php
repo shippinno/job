@@ -2,6 +2,7 @@
 
 namespace Shippinno\Job\Application\Job;
 
+use Shippinno\Job\Domain\Model\Job;
 use Shippinno\Job\Domain\Model\JobFailedException;
 
 abstract class JobRunner

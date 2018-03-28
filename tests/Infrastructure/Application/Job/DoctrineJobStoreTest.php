@@ -1,12 +1,14 @@
 <?php
 
-namespace Shippinno\Job\Application\Job;
+namespace Shippinno\Job\Test\Domain\Model;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
+use JMS\Serializer\SerializerBuilder;
 use PHPUnit\Framework\TestCase;
-use Shippinno\Job\Infrastructure\Application\Job\DoctrineJobStore;
+use Shippinno\Job\Domain\Model\StoredJob;
+use Shippinno\Job\Infrastructure\Domain\Model\DoctrineJobStore;
 
 class DoctrineJobStoreTest extends TestCase
 {
@@ -25,7 +27,8 @@ class DoctrineJobStoreTest extends TestCase
         $this->entityManager = $this->initEntityManager();
         $this->jobStore = new DoctrineJobStore(
             $this->entityManager,
-            $this->entityManager->getClassMetaData(StoredJob::class)
+            $this->entityManager->getClassMetaData(StoredJob::class),
+            SerializerBuilder::create()
         );
     }
 

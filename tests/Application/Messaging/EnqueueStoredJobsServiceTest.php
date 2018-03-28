@@ -1,6 +1,6 @@
 <?php
 
-namespace Shippinno\Job\Application\Messaging;
+namespace Shippinno\Job\Test\Application\Messaging;
 
 use DateTimeImmutable;
 use Enqueue\Null\NullContext;
@@ -10,9 +10,10 @@ use Interop\Queue\PsrDestination;
 use Interop\Queue\PsrMessage;
 use Mockery;
 use PHPUnit\Framework\TestCase;
-use Shippinno\Job\Application\Job\FakeStoredJob;
-use Shippinno\Job\Application\Job\JobStore;
-use Shippinno\Job\Application\Job\StoredJob;
+use Shippinno\Job\Application\Messaging\EnqueuedStoredJobTrackerStore;
+use Shippinno\Job\Application\Messaging\EnqueueStoredJobsService;
+use Shippinno\Job\Domain\Model\JobStore;
+use Shippinno\Job\Test\Domain\Model\FakeStoredJob;
 
 class EnqueueStoredJobsServiceTest extends TestCase
 {
