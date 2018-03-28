@@ -55,7 +55,7 @@ class JobConsume extends Command
         SerializerBuilder $serializerBuilder,
         Container $container,
         ManagerRegistry $managerRegistry = null,
-        LoggerInterface $logger
+        LoggerInterface $logger = null
     ) {
         parent::__construct();
         $this->context = $context;
@@ -107,7 +107,7 @@ class JobConsume extends Command
         $attempts = $message->getProperty('attempts', 0) + 1;
         if ($attempts > $job->maxAttempts()) {
             $consumer->reject($message);
-            $this->info(sprintf('Job exceeded max attempts (%d), rejected'), $job->maxAttempts());
+            $this->info(sprintf('Job exceeded max attempts (%d), rejected', $job->maxAttempts()));
             return;
         }
         /** @var JobRunner $jobRunner */
