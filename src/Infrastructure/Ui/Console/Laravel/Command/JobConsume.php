@@ -10,8 +10,10 @@ use Interop\Queue\PsrConsumer;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use JMS\Serializer\Serializer;
+use JMS\Serializer\SerializerBuilder;
 use Shippinno\Job\Application\Job\Job;
 use Shippinno\Job\Application\Job\JobRunner;
+use Shippinno\Job\Application\Job\StoredJob;
 use Shippinno\Job\Domain\Model\JobFailedException;
 
 class JobConsume extends Command
@@ -99,7 +101,7 @@ class JobConsume extends Command
         }
         $messageBody = json_decode($message->getBody());
         /** @var Job $job */
-        $job = $this->serializer->deserialize($messageBody->body, $messageBody->name, 'json');
+        $job = $this->serializer()->deserialize($messageBody->body, $messageBody->name, 'json');
         $attempts = $message->getProperty('attempts', 0) + 1;
         if ($attempts > $job->maxAttempts()) {
             $consumer->reject($message);
@@ -133,5 +135,27 @@ class JobConsume extends Command
         }
 
         return $message;
+    }
+
+    /**
+     * @return Serializer
+     */
+    protected function serializer(): Serializer
+    {
+        if (null === $this->serializer) {
+            $this->serializer =
+                SerializerBuilder::create()
+                    ->addMetadataDir(
+                        __DIR__.'/../../../../Serialization/JMS/Config',
+                        'Shippinno\\Jobbb\\'
+                    )
+                    ->setCacheDir(__DIR__.'/../../../var/cache/jms-serializer')
+                    ->build();
+
+        }
+
+        var_dump($this->serializer->getMetadataFactory()->getMetadataForClass(StoredJob::class)); exit;
+
+        return $this->serializer;
     }
 }

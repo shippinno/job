@@ -6,8 +6,12 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
 use Enqueue\Null\NullContext;
 use Enqueue\Null\NullMessage;
+use Enqueue\Null\NullQueue;
 use Illuminate\Container\Container;
 use Interop\Queue\PsrConsumer;
+use Interop\Queue\PsrContext;
+use Interop\Queue\PsrMessage;
+use Interop\Queue\PsrQueue;
 use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerBuilder;
 use Mockery;
@@ -15,7 +19,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Shippinno\Job\Application\Job\FakeJob;
 use Shippinno\Job\Application\Job\FakeJobRunner;
-use Shippinno\Job\Application\Job\StoredJob;
+use Shippinno\Job\Domain\Model\StoredJob;
 
 class JobConsumeTest extends TestCase
 {
@@ -44,8 +48,6 @@ class JobConsumeTest extends TestCase
             ->shouldReceive('run')
 //            ->withArgs()
             ->once();
-
-
 
         $jobConsume = new JobConsume(
             new NullContext,
