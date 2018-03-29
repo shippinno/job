@@ -57,11 +57,11 @@ class JobConsume extends Command
 
     public function handle()
     {
-        $queue = env('JOB_CONSUME_QUEUE');
-        if (!$queue) {
+        $queueName = env('JOB_CONSUME_QUEUE');
+        if (!$queueName) {
             throw new LogicException('The env JOB_CONSUME_QUEUE is not defined');
         }
-        $consumer = $this->context->createConsumer($queue);
+        $consumer = $this->context->createConsumer($this->context->createQueue($queueName));
         while (true) {
             if (null !== $this->managerRegistry) {
                 $this->managerRegistry->getManager()->clear();
