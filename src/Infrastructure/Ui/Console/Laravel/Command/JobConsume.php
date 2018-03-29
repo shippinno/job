@@ -22,11 +22,6 @@ class JobConsume extends Command
     protected $signature = 'job:consume';
 
     /**
-     * @var PsrContext
-     */
-    private $context;
-
-    /**
      * @var ConsumeStoredJobService
      */
     private $consumeStoredJobService;
@@ -37,19 +32,16 @@ class JobConsume extends Command
     private $managerRegistry;
 
     /**
-     * @param PsrContext $context
      * @param ConsumeStoredJobService $consumeStoredJobService
      * @param ManagerRegistry|null $managerRegistry
      * @param LoggerInterface|null $logger
      */
     public function __construct(
-        PsrContext $context,
         ConsumeStoredJobService $consumeStoredJobService,
         ManagerRegistry $managerRegistry = null,
         LoggerInterface $logger = null
     ) {
         parent::__construct();
-        $this->context = $context;
         $this->consumeStoredJobService = $consumeStoredJobService;
         $this->managerRegistry = $managerRegistry;
         $this->setLogger(null !== $logger ? $logger : new NullLogger);
@@ -61,12 +53,11 @@ class JobConsume extends Command
         if (!$queueName) {
             throw new LogicException('The env JOB_CONSUME_QUEUE is not defined');
         }
-        $consumer = $this->context->createConsumer($this->context->createQueue($queueName));
         while (true) {
             if (null !== $this->managerRegistry) {
                 $this->managerRegistry->getManager()->clear();
             }
-            $this->consumeStoredJobService->execute($consumer);
+            $this->consumeStoredJobService->execute($queueName);
             if (null !== $this->managerRegistry) {
                 $this->managerRegistry->getManager()->flush();
             }
