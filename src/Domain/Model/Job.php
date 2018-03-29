@@ -65,4 +65,12 @@ abstract class Job
     {
         return $this->createdAt;
     }
+
+    /**
+     * @return Job[]
+     */
+    public function dependentJobs(): array
+    {
+        return [];
+    }
 }

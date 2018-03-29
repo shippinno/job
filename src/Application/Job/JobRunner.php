@@ -5,11 +5,11 @@ namespace Shippinno\Job\Application\Job;
 use Shippinno\Job\Domain\Model\Job;
 use Shippinno\Job\Domain\Model\JobFailedException;
 
-abstract class JobRunner
+interface JobRunner
 {
     /**
      * @param Job $job
      * @throws JobFailedException
      */
-    abstract public function run(Job $job): void;
+    public function run(Job $job): void;
 }

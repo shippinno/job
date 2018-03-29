@@ -2,7 +2,7 @@
 
 namespace Shippinno\Job\Application\Job;
 
-use Shippinno\Job\Domain\Model\JobNotRegisteredException;
+use Shippinno\Job\Domain\Model\JobRunnerNotRegisteredException;
 
 class JobRunnerRegistry
 {
@@ -24,12 +24,12 @@ class JobRunnerRegistry
     /**
      * @param string $jobName
      * @return JobRunner
-     * @throws JobNotRegisteredException
+     * @throws JobRunnerNotRegisteredException
      */
     public function get(string $jobName): JobRunner
     {
         if (!isset($this->jobRunners[$jobName])) {
-            throw new JobNotRegisteredException;
+            throw new JobRunnerNotRegisteredException($jobName);
         }
 
         return $this->jobRunners[$jobName];

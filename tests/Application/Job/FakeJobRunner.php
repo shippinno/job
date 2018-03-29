@@ -7,7 +7,7 @@ use Shippinno\Job\Domain\Model\Job;
 use Shippinno\Job\Domain\Model\JobFailedException;
 use Shippinno\Job\Test\Domain\Model\FakeJob;
 
-class FakeJobRunner extends JobRunner
+class FakeJobRunner implements JobRunner
 {
     /**
      * {@inheritdoc}
