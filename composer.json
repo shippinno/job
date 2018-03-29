@@ -17,8 +17,7 @@
         "jms/serializer": "^1.11",
         "queue-interop/queue-interop": "^0.6.1",
         "symfony/yaml": "^3.4",
-        "illuminate/console": "^5.0",
-        "illuminate/container": "^5.0"
+        "illuminate/console": "^5.5"
     },
     "require-dev": {
         "enqueue/null": "^0.8.23",
