@@ -33,12 +33,13 @@ class DoctrineAbandonedJobMessageStoreTest extends TestCase
 
     public function testAddRemove()
     {
-        $abandonedJobMessage = new AbandonedJobMessage('MESSAGE', 'REASON');
+        $abandonedJobMessage = new AbandonedJobMessage('QUEUE', 'MESSAGE', 'REASON');
         $this->abandonedJobMessageStore->add($abandonedJobMessage);
         $this->entityManager->flush();
         $abandonedJobMessages = $this->abandonedJobMessageStore->all();
         $this->assertCount(1, $abandonedJobMessages);
         $this->assertSame(1, $abandonedJobMessages[0]->id());
+        $this->assertSame($abandonedJobMessage->queue(), $abandonedJobMessages[0]->queue());
         $this->assertSame($abandonedJobMessage->name(), $abandonedJobMessages[0]->name());
         $this->assertSame($abandonedJobMessage->reason(), $abandonedJobMessages[0]->reason());
         $this->assertSame($abandonedJobMessage->abandonedAt(), $abandonedJobMessages[0]->abandonedAt());
