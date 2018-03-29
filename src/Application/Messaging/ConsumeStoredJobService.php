@@ -3,6 +3,7 @@
 namespace Shippinno\Job\Application\Messaging;
 
 use Interop\Queue\PsrConsumer;
+use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use Shippinno\Job\Application\Job\JobRunnerRegistry;
 use Shippinno\Job\Domain\Model\AbandonedJobMessage;
@@ -19,6 +20,11 @@ class ConsumeStoredJobService
      * @var StoredJobSerializer
      */
     private $storedJobSerializer;
+
+    /**
+     * @var PsrContext
+     */
+    private $context;
 
     /**
      * @var JobSerializer
@@ -41,6 +47,7 @@ class ConsumeStoredJobService
     private $abandonedJobMessageStore;
 
     /**
+     * @param PsrContext $context
      * @param StoredJobSerializer $storedJobSerializer
      * @param JobSerializer $jobSerializer
      * @param JobRunnerRegistry $jobRunnerRegistry
@@ -48,12 +55,14 @@ class ConsumeStoredJobService
      * @param AbandonedJobMessageStore $abandonedJobMessageStore
      */
     public function __construct(
+        PsrContext $context,
         StoredJobSerializer $storedJobSerializer,
         JobSerializer $jobSerializer,
         JobRunnerRegistry $jobRunnerRegistry,
         JobStore $jobStore,
         AbandonedJobMessageStore $abandonedJobMessageStore
     ) {
+        $this->context = $context;
         $this->storedJobSerializer = $storedJobSerializer;
         $this->jobSerializer = $jobSerializer;
         $this->jobRunnerRegistry = $jobRunnerRegistry;
@@ -62,10 +71,11 @@ class ConsumeStoredJobService
     }
 
     /**
-     * @param PsrConsumer $consumer
+     * @param string $queueName
      */
-    public function execute(PsrConsumer $consumer)
+    public function execute(string $queueName)
     {
+        $consumer = $this->context->createConsumer($this->context->createQueue($queueName));
         $message = $consumer->receive();
         if (null === $message) {
             return;

@@ -66,15 +66,9 @@ class JobConsume extends Command
             if (null !== $this->managerRegistry) {
                 $this->managerRegistry->getManager()->clear();
             }
-            try {
-                $this->consumeStoredJobService->execute($consumer);
-                if (null !== $this->managerRegistry) {
-                    $this->managerRegistry->getManager()->flush();
-                }
-            } catch (JobRunnerNotRegisteredException $e) {
-                if (null !== $this->managerRegistry) {
-                    $this->managerRegistry->getManager()->flush();
-                }
+            $this->consumeStoredJobService->execute($consumer);
+            if (null !== $this->managerRegistry) {
+                $this->managerRegistry->getManager()->flush();
             }
         }
     }

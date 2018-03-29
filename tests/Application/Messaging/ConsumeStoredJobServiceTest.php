@@ -4,7 +4,9 @@ namespace Shippinno\Job\Test\Application\Messaging;
 
 use Enqueue\Null\NullMessage;
 use Interop\Queue\PsrConsumer;
+use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
+use Interop\Queue\PsrQueue;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Job\JobRunnerRegistry;
@@ -41,6 +43,8 @@ class ConsumeStoredJobServiceTest extends TestCase
      */
     private $abandonedJobMessageStore;
 
+    private const QUEUE_NAME = 'QUEUE_NAME';
+
     public function setUp()
     {
         $this->storedJobSerializer = new SimpleStoredJobSerializer;
@@ -48,7 +52,7 @@ class ConsumeStoredJobServiceTest extends TestCase
         $this->abandonedJobMessageStore = new InMemoryAbandonedJobMessageStore;
     }
 
-    public function testItShouldThrowExceptionIfJobRunnerNotRegistered()
+    public function testItShouldRejectAndAbandoneIfJobRunnerNotRegistered()
     {
         $job = new UnknownJob;
         $identifier = uniqid();
@@ -63,8 +67,9 @@ class ConsumeStoredJobServiceTest extends TestCase
                 })
             ])
             ->once();
-        $service = $this->createService();
-        $service->execute($consumer);
+        $context = $this->createContext($consumer);
+        $service = $this->createService($context);
+        $service->execute(self::QUEUE_NAME);
         $this->assertCount(1, $this->abandonedJobMessageStore->all());
     }
 
@@ -83,8 +88,9 @@ class ConsumeStoredJobServiceTest extends TestCase
                 })
             ])
             ->once();
-        $service = $this->createService();
-        $service->execute($consumer);
+        $context = $this->createContext($consumer);
+        $service = $this->createService($context);
+        $service->execute(self::QUEUE_NAME);
         $this->assertTrue(true);
     }
 
@@ -103,8 +109,9 @@ class ConsumeStoredJobServiceTest extends TestCase
                 })
             ])
             ->once();
-        $service = $this->createService(count($job->dependentJobs()));
-        $service->execute($consumer);
+        $context = $this->createContext($consumer);
+        $service = $this->createService($context, count($job->dependentJobs()));
+        $service->execute(self::QUEUE_NAME);
         $this->assertCount(0, $this->abandonedJobMessageStore->all());
     }
 
@@ -125,8 +132,9 @@ class ConsumeStoredJobServiceTest extends TestCase
                 true
             ])
             ->once();
-        $service = $this->createService();
-        $service->execute($consumer);
+        $context = $this->createContext($consumer);
+        $service = $this->createService($context);
+        $service->execute(self::QUEUE_NAME);
         $this->assertCount(0, $this->abandonedJobMessageStore->all());
     }
 
@@ -145,8 +153,9 @@ class ConsumeStoredJobServiceTest extends TestCase
                 })
             ])
             ->once();
-        $service = $this->createService();
-        $service->execute($consumer);
+        $context = $this->createContext($consumer);
+        $service = $this->createService($context);
+        $service->execute(self::QUEUE_NAME);
         $this->assertCount(1, $this->abandonedJobMessageStore->all());
     }
 
@@ -173,7 +182,27 @@ class ConsumeStoredJobServiceTest extends TestCase
         return $consumer;
     }
 
-    private function createService(int $dependentJobsCount = 0): ConsumeStoredJobService
+    private function createContext(PsrConsumer $consumer)
+    {
+        $queue = Mockery::mock(PsrQueue::class);
+        $context = Mockery::mock(PsrContext::class);
+        $context
+            ->shouldReceive('createQueue')
+            ->once()
+            ->withArgs([self::QUEUE_NAME])
+            ->andReturn($queue)
+            ->shouldReceive('createConsumer')
+            ->once()
+            ->withArgs([
+                Mockery::on(function (PsrQueue $argument) use ($queue) {
+                    return $argument === $queue;
+                })
+            ])
+            ->andReturn($consumer);
+        return $context;
+    }
+
+    private function createService(PsrContext $context, int $dependentJobsCount = 0): ConsumeStoredJobService
     {
         $storedJobSerializer = new SimpleStoredJobSerializer;
         $jobSerializer = new SimpleJobSerializer;
@@ -188,6 +217,7 @@ class ConsumeStoredJobServiceTest extends TestCase
             $jobStore->shouldReceive('append')->times($dependentJobsCount);
         }
         $service = new ConsumeStoredJobService(
+            $context,
             $storedJobSerializer,
             $jobSerializer,
             $jobRunnerRegistry,
