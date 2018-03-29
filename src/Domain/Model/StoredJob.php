@@ -61,4 +61,12 @@ class StoredJob
     {
         return $this->body;
     }
+
+    /**
+     * @return DateTimeImmutable
+     */
+    public function createdAt(): DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
 }

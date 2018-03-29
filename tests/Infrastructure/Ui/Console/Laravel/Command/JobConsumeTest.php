@@ -9,6 +9,7 @@ use Enqueue\Null\NullContext;
 use Enqueue\Null\NullMessage;
 use Interop\Queue\PsrConsumer;
 use Mockery;
+use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Shippinno\Job\Application\Job\JobRunnerRegistry;
 use Shippinno\Job\Domain\Model\JobSerializer;
@@ -17,9 +18,8 @@ use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobConsume;
 use Shippinno\Job\Test\Application\Job\FakeJobRunner;
 use Shippinno\Job\Test\Domain\Model\FakeJob;
 use Shippinno\Job\Domain\Model\StoredJob;
-use Shippinno\Job\Test\Domain\Model\FakeJobSerializer;
-use Shippinno\Job\Test\Domain\Model\FakeStoredJobSerializer;
-use Shippinno\Job\Test\TestCase;
+use Shippinno\Job\Test\Domain\Model\SimpleJobSerializer;
+use Shippinno\Job\Test\Domain\Model\SimpleStoredJobSerializer;
 
 class JobConsumeTest extends TestCase
 {
@@ -35,8 +35,8 @@ class JobConsumeTest extends TestCase
 
     public function setUp()
     {
-        $this->jobSerializer = new FakeJobSerializer;
-        $this->storedJobSerializer = new FakeStoredJobSerializer;
+        $this->jobSerializer = new SimpleJobSerializer;
+        $this->storedJobSerializer = new SimpleStoredJobSerializer;
     }
 
     public function testItShouldAcknowledgeWhenSucceeded()
@@ -84,7 +84,7 @@ class JobConsumeTest extends TestCase
 //                })
 //            ])
             ->once();
-        
+
         $jobConsume = new JobConsume(
             new NullContext,
             $this->jobSerializer,

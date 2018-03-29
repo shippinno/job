@@ -5,7 +5,7 @@ namespace Shippinno\Job\Test\Domain\Model;
 use Shippinno\Job\Domain\Model\Job;
 use Shippinno\Job\Domain\Model\JobSerializer;
 
-class FakeJobSerializer implements JobSerializer
+class SimpleJobSerializer implements JobSerializer
 {
     /**
      * {@inheritdoc}

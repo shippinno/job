@@ -22,7 +22,7 @@ class JMSStoredJobSerializer implements StoredJobSerializer
         $this->serializer =
             $serializerBuilder
                 ->addMetadataDir(
-                    __DIR__ . '/../../Serialization/JMS/Config',
+                    __DIR__.'/../../Serialization/JMS/Config',
                     'Shippinno\\Job'
                 )
                 ->build();
