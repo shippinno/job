@@ -40,7 +40,7 @@ class DoctrineAbandonedJobMessageStoreTest extends TestCase
         $this->assertCount(1, $abandonedJobMessages);
         $this->assertSame(1, $abandonedJobMessages[0]->id());
         $this->assertSame($abandonedJobMessage->queue(), $abandonedJobMessages[0]->queue());
-        $this->assertSame($abandonedJobMessage->name(), $abandonedJobMessages[0]->name());
+        $this->assertSame($abandonedJobMessage->message(), $abandonedJobMessages[0]->message());
         $this->assertSame($abandonedJobMessage->reason(), $abandonedJobMessages[0]->reason());
         $this->assertSame($abandonedJobMessage->abandonedAt(), $abandonedJobMessages[0]->abandonedAt());
         $this->abandonedJobMessageStore->remove($abandonedJobMessages[0]);
@@ -59,7 +59,7 @@ class DoctrineAbandonedJobMessageStoreTest extends TestCase
         );
         $tool = new SchemaTool($entityManager);
         $tool->createSchema([
-            $entityManager->getClassMetadata(StoredJob::class),
+            $entityManager->getClassMetadata(AbandonedJobMessage::class),
         ]);
 
         return $entityManager;
