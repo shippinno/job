@@ -4,10 +4,25 @@ namespace Shippinno\Job\Infrastructure\Domain\Model;
 
 use Doctrine\ORM\EntityRepository;
 use Shippinno\Job\Domain\Model\AbandonedJobMessage;
+use Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageStore;
 
 class DoctrineAbandonedJobMessageStore extends EntityRepository implements AbandonedJobMessageStore
 {
+    /**
+     * {@inheritdoc}
+     */
+    public function abandonedJobMessageOfId(int $id): ?AbandonedJobMessage
+    {
+        /** @var null|AbandonedJobMessage $abandonedJobMessage */
+        $abandonedJobMessage = $this->find($id);
+        if (null === $abandonedJobMessage) {
+            throw new AbandonedJobMessageNotFoundException;
+        }
+
+        return $abandonedJobMessage;
+    }
+
     /**
      * {@inheritdoc}
      */

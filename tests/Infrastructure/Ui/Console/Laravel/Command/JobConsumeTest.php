@@ -11,12 +11,23 @@ use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobConsume;
 
 class JobConsumeTest extends TestCase
 {
+    public function setUp()
+    {
+        putenv('JOB_CONSUME_QUEUE=test');
+    }
+
+    public function tearDown()
+    {
+        putenv('JOB_CONSUME_QUEUE=');
+    }
+
     /**
      * @expectedException \LogicException
      * @expectedExceptionMessage The env JOB_CONSUME_QUEUE is not defined
      */
     public function testItShouldThrowLogicExceptionIfEnvNotSet()
     {
+        putenv('JOB_CONSUME_QUEUE=');
         $jobConsume = new JobConsume(
             Mockery::mock(ConsumeStoredJobService::class),
             Mockery::mock(ManagerRegistry::class)
@@ -26,7 +37,6 @@ class JobConsumeTest extends TestCase
 
     public function testIfServiceExecutedSuccessfully()
     {
-        putenv('JOB_CONSUME_QUEUE=test');
         $consumeStoredJobService = Mockery::mock(ConsumeStoredJobService::class);
         $consumeStoredJobService
             ->shouldReceive('execute')
@@ -42,6 +52,5 @@ class JobConsumeTest extends TestCase
         $jobConsume = new JobConsume($consumeStoredJobService, $managerRegistry);
         $jobConsume->handle();
         $this->assertTrue(true);
-        putenv('JOB_CONSUME_QUEUE=');
     }
 }

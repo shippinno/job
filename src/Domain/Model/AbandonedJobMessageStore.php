@@ -5,6 +5,13 @@ namespace Shippinno\Job\Domain\Model;
 interface AbandonedJobMessageStore
 {
     /**
+     * @param int $id
+     * @return null|AbandonedJobMessage
+     * @throws AbandonedJobMessageNotFoundException
+     */
+    public function abandonedJobMessageOfId(int $id): ?AbandonedJobMessage;
+
+    /**
      * @return AbandonedJobMessage[]
      */
     public function all(): array;

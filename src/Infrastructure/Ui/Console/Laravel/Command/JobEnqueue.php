@@ -53,7 +53,8 @@ class JobEnqueue extends Command
         if (!$topic) {
             throw new LogicException('The env JOB_ENQUEUE_TOPIC is not defined');
         }
-        while (true) {
+        $forever = !env('JOB_TESTING', false);
+        do {
             if (null !== $this->managerRegistry) {
                 $this->managerRegistry->getManager()->clear();
             }
@@ -64,7 +65,6 @@ class JobEnqueue extends Command
                         $this->managerRegistry->getManager()->flush();
                     }
                     $this->logger->debug(sprintf('%d jobs enqueued.', $enqueuedMessagesCount));
-                    $this->info(sprintf('%d jobs enqueued.', $enqueuedMessagesCount));
                 }
             } catch (FailedToEnqueueStoredJobException $e) {
                 $this->logger->alert('Failed to enqueue stored job, retrying in 60 seconds.', [
@@ -73,6 +73,6 @@ class JobEnqueue extends Command
                 sleep(60);
                 continue;
             }
-        }
+        } while ($forever);
     }
 }

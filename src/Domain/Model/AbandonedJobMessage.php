@@ -44,4 +44,28 @@ class AbandonedJobMessage
     {
         return $this->id;
     }
+
+    /**
+     * @return string
+     */
+    public function message(): string
+    {
+        return $this->message;
+    }
+
+    /**
+     * @return string
+     */
+    public function reason(): string
+    {
+        return $this->reason;
+    }
+
+    /**
+     * @return DateTimeImmutable
+     */
+    public function abandonedAt(): DateTimeImmutable
+    {
+        return $this->abandonedAt;
+    }
 }

@@ -40,9 +40,9 @@ class DoctrineJobStoreTest extends TestCase
     {
         $this->jobStore->append(new FakeJob);
         $this->entityManager->flush();
-        $storedEvents = $this->jobStore->storedJobsSince(null);
-        $this->assertCount(1, $storedEvents);
-        $this->assertSame(1, $storedEvents[0]->id());
+        $storedJobs = $this->jobStore->storedJobsSince(null);
+        $this->assertCount(1, $storedJobs);
+        $this->assertSame(1, $storedJobs[0]->id());
     }
 
     public function testStoredJobsSinceWithJobId()
@@ -51,10 +51,10 @@ class DoctrineJobStoreTest extends TestCase
         $this->jobStore->append(new FakeJob);
         $this->jobStore->append(new FakeJob);
         $this->entityManager->flush();
-        $storedEvents = $this->jobStore->storedJobsSince(1);
-        $this->assertCount(2, $storedEvents);
-        $this->assertSame(2, $storedEvents[0]->id());
-        $this->assertSame(3, $storedEvents[1]->id());
+        $storedJobs = $this->jobStore->storedJobsSince(1);
+        $this->assertCount(2, $storedJobs);
+        $this->assertSame(2, $storedJobs[0]->id());
+        $this->assertSame(3, $storedJobs[1]->id());
     }
 
     protected function initEntityManager(): EntityManager

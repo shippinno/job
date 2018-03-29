@@ -3,6 +3,7 @@
 namespace Shippinno\Job\Test\Infrastructure\Domain\Model;
 
 use Shippinno\Job\Domain\Model\AbandonedJobMessage;
+use Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageStore;
 
 class InMemoryAbandonedJobMessageStore implements AbandonedJobMessageStore
@@ -11,6 +12,17 @@ class InMemoryAbandonedJobMessageStore implements AbandonedJobMessageStore
      * @var AbandonedJobMessage[]
      */
     private $abandonedJobMessages = [];
+
+    /**
+     * {@inheritdoc}
+     */
+    public function abandonedJobMessageOfId(int $id): ?AbandonedJobMessage
+    {
+        if (!isset($this->abandonedJobMessages[$id])) {
+            throw new AbandonedJobMessageNotFoundException;
+        }
+        return $this->abandonedJobMessages[$id];
+    }
 
     /**
      * {@inheritdoc}
