@@ -29,4 +29,7 @@
             <directory suffix=".php">./src/</directory>
         </whitelist>
     </filter>
+    <php>
+        <env name="JOB_TESTING" value="true"/>
+    </php>
 </phpunit>

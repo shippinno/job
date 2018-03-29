@@ -53,7 +53,8 @@ class JobConsume extends Command
         if (!$queueName) {
             throw new LogicException('The env JOB_CONSUME_QUEUE is not defined');
         }
-        while (true) {
+        $forever = !env('JOB_TESTING', false);
+        do {
             if (null !== $this->managerRegistry) {
                 $this->managerRegistry->getManager()->clear();
             }
@@ -61,6 +62,6 @@ class JobConsume extends Command
             if (null !== $this->managerRegistry) {
                 $this->managerRegistry->getManager()->flush();
             }
-        }
+        } while ($forever);
     }
 }
