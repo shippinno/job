@@ -5,6 +5,7 @@
                           http://raw.github.com/doctrine/doctrine2/master/doctrine-mapping.xsd">
     <entity name="Shippinno\Job\Domain\Model\AbandonedJobMessage" table="abandoned_job_messages">
         <id name="id" type="integer"><generator/></id>
+        <field name="queue"/>
         <field name="message" type="text"/>
         <field name="reason" type="text"/>
         <field name="abandonedAt" type="datetime_immutable"/>

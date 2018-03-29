@@ -86,7 +86,7 @@ class ConsumeStoredJobService
             $jobRunner = $this->jobRunnerRegistry->get(get_class($job));
         } catch (JobRunnerNotRegisteredException $e) {
             $this->abandonedJobMessageStore->add(
-                new AbandonedJobMessage($message->getBody(), $e->__toString())
+                new AbandonedJobMessage($queueName, $message->getBody(), $e->__toString())
             );
             $consumer->reject($message);
             return;
@@ -104,7 +104,7 @@ class ConsumeStoredJobService
             $attempts = $message->getProperty('attempts', 0) + 1;
             if ($attempts > $job->maxAttempts()) {
                 $this->abandonedJobMessageStore->add(
-                    new AbandonedJobMessage($message->getBody(), $e->__toString())
+                    new AbandonedJobMessage($queueName, $message->getBody(), $e->__toString())
                 );
                 $consumer->reject($message);
                 return;

@@ -14,6 +14,11 @@ class AbandonedJobMessage
     /**
      * @var string
      */
+    private $queue;
+
+    /**
+     * @var string
+     */
     private $message;
 
     /**
@@ -27,11 +32,13 @@ class AbandonedJobMessage
     private $abandonedAt;
 
     /**
+     * @param string $queue
      * @param string $message
      * @param string $reason
      */
-    public function __construct(string $message, string $reason)
+    public function __construct(string $queue, string $message, string $reason)
     {
+        $this->queue = $queue;
         $this->message = $message;
         $this->reason = $reason;
         $this->abandonedAt = new DateTimeImmutable;
@@ -43,6 +50,14 @@ class AbandonedJobMessage
     public function id(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function queue(): string
+    {
+        return $this->queue;
     }
 
     /**
