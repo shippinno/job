@@ -7,14 +7,14 @@ use Illuminate\Console\Command;
 use Shippinno\Job\Application\Messaging\RequeueAbandonedJobMessageService;
 use Shippinno\Job\Infrastructure\Persistence\Doctrine\ManagerRegistryAwareTrait;
 
-class JobRequeue extends Command
+class JobAbandonedRequeue extends Command
 {
     use ManagerRegistryAwareTrait;
 
     /**
      * {@inheritdoc}
      */
-    protected $signature = 'job:requeue {id}';
+    protected $signature = 'job:abandoned:requeue {id}';
 
     /**
      * @var RequeueAbandonedJobMessageService

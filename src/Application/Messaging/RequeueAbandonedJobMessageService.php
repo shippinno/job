@@ -36,7 +36,7 @@ class RequeueAbandonedJobMessageService
      * @throws AbandonedJobMessageFailedToRequeueException
      * @throws \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
      */
-    public function execute(int $abandonedJobMessageId)
+    public function execute(int $abandonedJobMessageId): void
     {
         $abandonedJobMessage = $this->abandonedJobMessageStore->abandonedJobMessageOfId($abandonedJobMessageId);
         $queue = $this->context->createQueue($abandonedJobMessage->queue());

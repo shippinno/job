@@ -7,14 +7,14 @@ use Doctrine\ORM\EntityManager;
 use Illuminate\Container\Container;
 use Mockery;
 use PHPUnit\Framework\TestCase;
-use Shippinno\Job\Application\Messaging\RequeueAbandonedJobMessageService;
-use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobRequeue;
+use Shippinno\Job\Application\Messaging\DeleteAbandonedJobMessageService;
+use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobAbandonedDelete;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Tests\Fixtures\DummyOutput;
 
-class JobRequeueTest extends TestCase
+class JobAbandonedDeleteTest extends TestCase
 {
     public function testThatServiceIsExecuted()
     {
@@ -22,12 +22,12 @@ class JobRequeueTest extends TestCase
         $entityManager->shouldReceive('flush')->once();
         $managerRegistry = Mockery::mock(ManagerRegistry::class);
         $managerRegistry->shouldReceive(['getManager' => $entityManager]);
-        $service = Mockery::mock(RequeueAbandonedJobMessageService::class);
+        $service = Mockery::mock(DeleteAbandonedJobMessageService::class);
         $service->shouldReceive('execute')->once()->withArgs([1]);
-        $command = new JobRequeue($service, $managerRegistry);
+        $command = new JobAbandonedDelete($service, $managerRegistry);
         $command->setLaravel(new Container);
         $inputDefinition = new InputDefinition([new InputArgument('id')]);
-        $input = new ArrayInput(['id' => '01'], $inputDefinition);
+        $input = new ArrayInput(['id' => '1'], $inputDefinition);
         $output = new DummyOutput;
         $command->run($input, $output);
         $this->assertTrue(true);

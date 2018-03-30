@@ -73,7 +73,7 @@ class ConsumeStoredJobService
     /**
      * @param string $queueName
      */
-    public function execute(string $queueName)
+    public function execute(string $queueName): void
     {
         $consumer = $this->context->createConsumer($this->context->createQueue($queueName));
         $message = $consumer->receive();
