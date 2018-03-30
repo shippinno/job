@@ -2,7 +2,7 @@
 
 namespace Shippinno\Job\Application\Messaging;
 
-use Interop\Queue\PsrConsumer;
+use Enqueue\Sqs\SqsMessage;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use Shippinno\Job\Application\Job\JobRunnerRegistry;
@@ -124,7 +124,7 @@ class ConsumeStoredJobService
      */
     protected function delayMessage(PsrMessage $message, int $delay)
     {
-        if (method_exists($message, 'setDelaySeconds')) {
+        if ($message instanceof SqsMessage) {
             $message->setDelaySeconds($delay);
         }
 

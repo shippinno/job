@@ -3,6 +3,7 @@
 namespace Shippinno\Job\Test\Application\Messaging;
 
 use Enqueue\Null\NullMessage;
+use Enqueue\Sqs\SqsMessage;
 use Interop\Queue\PsrConsumer;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
@@ -28,6 +29,8 @@ use Shippinno\Job\Test\Infrastructure\Domain\Model\InMemoryAbandonedJobMessageSt
 
 class ConsumeStoredJobServiceTest extends TestCase
 {
+    private const QUEUE_NAME = 'QUEUE_NAME';
+
     /**
      * @var JobSerializer
      */
@@ -42,8 +45,6 @@ class ConsumeStoredJobServiceTest extends TestCase
      * @var AbandonedJobMessageStore
      */
     private $abandonedJobMessageStore;
-
-    private const QUEUE_NAME = 'QUEUE_NAME';
 
     public function setUp()
     {
@@ -126,17 +127,20 @@ class ConsumeStoredJobServiceTest extends TestCase
 
     public function testItShouldRequeueIfFailedAndMaxAttemptsNotExceeded()
     {
+        $reattemptDelay = 600;
         $job = new FakeJob(true);
-        $job->setReattemptDelay(0);
+        $job->setReattemptDelay($reattemptDelay);
         $identifier = uniqid();
-        $message = $this->createMessage($identifier, $job);
+        $message = $this->createMessage($identifier, $job, 0, SqsMessage::class);
         $consumer = $this->createConsumer($message);
         $consumer
             ->shouldReceive('reject')
             ->once()
             ->withArgs([
-                Mockery::on(function (NullMessage $message) use ($identifier) {
-                    return $message->getProperty('identifier') === $identifier;
+                Mockery::on(function (SqsMessage $message) use ($reattemptDelay, $identifier) {
+                    return
+                        $message->getProperty('identifier') === $identifier &&
+                        $message->getDelaySeconds() === $reattemptDelay;
                 }),
                 true
             ])
@@ -168,10 +172,10 @@ class ConsumeStoredJobServiceTest extends TestCase
         $this->assertCount(1, $this->abandonedJobMessageStore->all());
     }
 
-    private function createMessage(string $identifier, Job $job, int $attempts = null): PsrMessage
+    private function createMessage(string $identifier, Job $job, int $attempts = null, string $messageClass = NullMessage::class): PsrMessage
     {
         $storedJob = new StoredJob(get_class($job), $this->jobSerializer->serialize($job), $job->createdAt());
-        $message = new NullMessage($this->storedJobSerializer->serialize($storedJob));
+        $message = new $messageClass($this->storedJobSerializer->serialize($storedJob));
         $message->setProperty('identifier', $identifier);
         if (null !== $attempts) {
             $message->setProperty('attempts', $attempts);
