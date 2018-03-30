@@ -4,6 +4,7 @@ namespace Shippinno\Job\Application\Messaging;
 
 use Interop\Queue\Exception as QueueException;
 use Interop\Queue\PsrContext;
+use Shippinno\Job\Domain\Model\AbandonedJobMessageFailedToRequeueException;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageStore;
 
 class RequeueAbandonedJobMessageService
@@ -32,17 +33,19 @@ class RequeueAbandonedJobMessageService
 
     /**
      * @param int $abandonedJobMessageId
+     * @throws AbandonedJobMessageFailedToRequeueException
      * @throws \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
      */
     public function execute(int $abandonedJobMessageId)
     {
         $abandonedJobMessage = $this->abandonedJobMessageStore->abandonedJobMessageOfId($abandonedJobMessageId);
         $queue = $this->context->createQueue($abandonedJobMessage->queue());
-        $message = $this->context->createMessage($$abandonedJobMessage->message());
+        $message = $this->context->createMessage($abandonedJobMessage->message());
         try {
             $this->context->createProducer()->send($queue, $message);
+            $this->abandonedJobMessageStore->remove($abandonedJobMessage);
         } catch (QueueException $e) {
-//            throw new FailedToEnqueueStoredJobException($e);
+            throw new AbandonedJobMessageFailedToRequeueException($abandonedJobMessage->id(), $e);
         }
     }
 }

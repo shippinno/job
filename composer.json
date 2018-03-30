@@ -1,6 +1,15 @@
 {
     "name": "shippinno/job",
+    "description": "A package for creating, serializing, storing, queueing, and running jobs.",
     "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Hirofumi Tanigami",
+            "email": "hirofumi.tanigami@shippinno.co.jp",
+            "role": "Developer"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Shippinno\\Job\\": "src/"
@@ -16,14 +25,16 @@
         "doctrine/orm": "^2.5",
         "jms/serializer": "^1.11",
         "queue-interop/queue-interop": "^0.6.1",
-        "symfony/yaml": "^3.4",
-        "illuminate/console": "^5.5"
+        "symfony/yaml": "^3.4"
     },
     "require-dev": {
         "enqueue/null": "^0.8.23",
-        "phpunit/phpunit": "^7.0",
+        "enqueue/sqs": "^0.8.23"
+        "illuminate/console": "^5.5",
+        "illuminate/container": "^5.5",
         "mockery/mockery": "^1.0",
+        "phpunit/phpunit": "^7.0",
         "squizlabs/php_codesniffer": "^3.2",
-        "illuminate/container": "^5.5"
+        "wmde/psr-log-test-doubles": "^2.2",
     }
 }

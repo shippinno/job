@@ -2,12 +2,13 @@
 
 namespace Shippinno\Job\Test\Infrastructure\Ui\Console\Laravel\Command;
 
-use Enqueue\Null\NullContext;
+use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManager;
 use Illuminate\Container\Container;
+use Mockery;
 use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Messaging\RequeueAbandonedJobMessageService;
 use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobRequeue;
-use Shippinno\Job\Test\Infrastructure\Domain\Model\InMemoryAbandonedJobMessageStore;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
@@ -15,18 +16,20 @@ use Symfony\Component\Console\Tests\Fixtures\DummyOutput;
 
 class JobRequeueTest extends TestCase
 {
-    /**
-     * @expectedException \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
-     */
-    public function test()
+    public function testThatServiceIsExecuted()
     {
+        $entityManager = Mockery::mock(EntityManager::class);
+        $entityManager->shouldReceive('flush')->once();
+        $managerRegistry = Mockery::mock(ManagerRegistry::class);
+        $managerRegistry->shouldReceive(['getManager' => $entityManager]);
+        $service = Mockery::mock(RequeueAbandonedJobMessageService::class);
+        $service->shouldReceive('execute')->once()->withArgs([1]);
+        $command = new JobRequeue($service, $managerRegistry);
+        $command->setLaravel(new Container);
         $inputDefinition = new InputDefinition([new InputArgument('id')]);
-        $input = new ArrayInput(['id' => 1], $inputDefinition);
+        $input = new ArrayInput(['id' => '01'], $inputDefinition);
         $output = new DummyOutput;
-        $jobRequeue = new JobRequeue(
-            new RequeueAbandonedJobMessageService(new NullContext, new InMemoryAbandonedJobMessageStore)
-        );
-        $jobRequeue->setLaravel(new Container);
-        $jobRequeue->run($input, $output);
+        $command->run($input, $output);
+        $this->assertTrue(true);
     }
 }

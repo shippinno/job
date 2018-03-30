@@ -19,7 +19,7 @@ class InMemoryAbandonedJobMessageStore implements AbandonedJobMessageStore
     public function abandonedJobMessageOfId(int $id): ?AbandonedJobMessage
     {
         if (!isset($this->abandonedJobMessages[$id])) {
-            throw new AbandonedJobMessageNotFoundException;
+            throw new AbandonedJobMessageNotFoundException($id);
         }
         return $this->abandonedJobMessages[$id];
     }

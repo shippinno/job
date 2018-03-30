@@ -31,7 +31,16 @@ class DoctrineAbandonedJobMessageStoreTest extends TestCase
         );
     }
 
-    public function testAddRemove()
+    /**
+     * @expectedException \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
+     * @expectedExceptionMessage Abandoned job message not found (1)
+     */
+    public function testThatExceptionThrownIfNotFound()
+    {
+        $this->abandonedJobMessageStore->abandonedJobMessageOfId(1);
+    }
+
+    public function testAddFindRemove()
     {
         $abandonedJobMessage = new AbandonedJobMessage('QUEUE', 'MESSAGE', 'REASON');
         $this->abandonedJobMessageStore->add($abandonedJobMessage);
@@ -43,6 +52,7 @@ class DoctrineAbandonedJobMessageStoreTest extends TestCase
         $this->assertSame($abandonedJobMessage->message(), $abandonedJobMessages[0]->message());
         $this->assertSame($abandonedJobMessage->reason(), $abandonedJobMessages[0]->reason());
         $this->assertSame($abandonedJobMessage->abandonedAt(), $abandonedJobMessages[0]->abandonedAt());
+        $this->assertInstanceOf(AbandonedJobMessage::class, $this->abandonedJobMessageStore->abandonedJobMessageOfId(1));
         $this->abandonedJobMessageStore->remove($abandonedJobMessages[0]);
         $this->entityManager->flush();
         $this->assertCount(0, $this->abandonedJobMessageStore->all());

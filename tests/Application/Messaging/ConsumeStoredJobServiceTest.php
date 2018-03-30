@@ -52,6 +52,15 @@ class ConsumeStoredJobServiceTest extends TestCase
         $this->abandonedJobMessageStore = new InMemoryAbandonedJobMessageStore;
     }
 
+    public function testThatNothingIsDoneIfReceivesNullMessage()
+    {
+        $consumer = $this->createConsumer(null);
+        $context = $this->createContext($consumer);
+        $service = $this->createService($context);
+        $service->execute(self::QUEUE_NAME);
+        $this->assertTrue(true);
+    }
+
     public function testItShouldRejectAndAbandoneIfJobRunnerNotRegistered()
     {
         $job = new UnknownJob;
@@ -171,7 +180,7 @@ class ConsumeStoredJobServiceTest extends TestCase
         return $message;
     }
 
-    private function createConsumer(PsrMessage $message)
+    private function createConsumer(?PsrMessage $message)
     {
         $consumer = Mockery::mock(PsrConsumer::class);
         $consumer

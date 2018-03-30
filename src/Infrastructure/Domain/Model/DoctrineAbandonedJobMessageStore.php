@@ -17,7 +17,7 @@ class DoctrineAbandonedJobMessageStore extends EntityRepository implements Aband
         /** @var null|AbandonedJobMessage $abandonedJobMessage */
         $abandonedJobMessage = $this->find($id);
         if (null === $abandonedJobMessage) {
-            throw new AbandonedJobMessageNotFoundException;
+            throw new AbandonedJobMessageNotFoundException($id);
         }
 
         return $abandonedJobMessage;
