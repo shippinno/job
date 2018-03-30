@@ -7,14 +7,14 @@ use Doctrine\Common\Persistence\ManagerRegistry;
 trait ManagerRegistryAwareTrait
 {
     /**
-     * @var ManagerRegistry
+     * @var ManagerRegistry|null $managerRegistry
      */
     protected $managerRegistry;
 
     /**
-     * @param ManagerRegistry $managerRegistry
+     * @param ManagerRegistry|null $managerRegistry
      */
-    public function setManagerRegistry(ManagerRegistry $managerRegistry)
+    public function setManagerRegistry(?ManagerRegistry $managerRegistry)
     {
         $this->managerRegistry = $managerRegistry;
     }
