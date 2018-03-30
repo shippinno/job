@@ -1,26 +1,20 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: tanigami
- * Date: 3/30/18
- * Time: 15:09
- */
 
 namespace Shippinno\Job\Test\Application\Messaging;
 
-
+use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Messaging\DeleteAbandonedJobMessageService;
 use Shippinno\Job\Domain\Model\AbandonedJobMessage;
 use Shippinno\Job\Test\Infrastructure\Domain\Model\InMemoryAbandonedJobMessageStore;
 
-class DeleteAbandonedJobMessagesServiceTest
+class DeleteAbandonedJobMessagesServiceTest extends TestCase
 {
     /**
      * @expectedException \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
      */
     public function testThatExceptionIsThrownIfMessageNotFound()
     {
-        $service = new DeleteAbandonedJobMessageService($abandonedJobMessageStore);
+        $service = new DeleteAbandonedJobMessageService(new InMemoryAbandonedJobMessageStore);
         $service->execute(1);
     }
 
