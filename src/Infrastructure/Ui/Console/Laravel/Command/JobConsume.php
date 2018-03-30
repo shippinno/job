@@ -4,16 +4,16 @@ namespace Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command;
 
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Illuminate\Console\Command;
-use Interop\Queue\PsrContext;
 use LogicException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Shippinno\Job\Application\Messaging\ConsumeStoredJobService;
-use Shippinno\Job\Domain\Model\JobRunnerNotRegisteredException;
+use Shippinno\Job\Infrastructure\Persistence\Doctrine\ManagerRegistryAwareTrait;
 
 class JobConsume extends Command
 {
+    use ManagerRegistryAwareTrait;
     use LoggerAwareTrait;
 
     /**
@@ -27,11 +27,6 @@ class JobConsume extends Command
     private $consumeStoredJobService;
 
     /**
-     * @var ManagerRegistry|null
-     */
-    private $managerRegistry;
-
-    /**
      * @param ConsumeStoredJobService $consumeStoredJobService
      * @param ManagerRegistry|null $managerRegistry
      * @param LoggerInterface|null $logger
@@ -43,7 +38,7 @@ class JobConsume extends Command
     ) {
         parent::__construct();
         $this->consumeStoredJobService = $consumeStoredJobService;
-        $this->managerRegistry = $managerRegistry;
+        $this->setManagerRegistry($managerRegistry);
         $this->setLogger(null !== $logger ? $logger : new NullLogger);
     }
 
@@ -55,13 +50,9 @@ class JobConsume extends Command
         }
         $forever = !env('JOB_TESTING', false);
         do {
-            if (null !== $this->managerRegistry) {
-                $this->managerRegistry->getManager()->clear();
-            }
+            $this->clear();
             $this->consumeStoredJobService->execute($queueName);
-            if (null !== $this->managerRegistry) {
-                $this->managerRegistry->getManager()->flush();
-            }
+            $this->flush();
         } while ($forever);
     }
 }

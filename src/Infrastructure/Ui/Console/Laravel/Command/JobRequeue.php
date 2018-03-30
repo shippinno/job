@@ -5,9 +5,12 @@ namespace Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Illuminate\Console\Command;
 use Shippinno\Job\Application\Messaging\RequeueAbandonedJobMessageService;
+use Shippinno\Job\Infrastructure\Persistence\Doctrine\ManagerRegistryAwareTrait;
 
 class JobRequeue extends Command
 {
+    use ManagerRegistryAwareTrait;
+
     /**
      * {@inheritdoc}
      */
@@ -19,11 +22,6 @@ class JobRequeue extends Command
     private $requeueAbandonedJobMessageService;
 
     /**
-     * @var ManagerRegistry|null
-     */
-    private $managerRegistry;
-
-    /**
      * @param RequeueAbandonedJobMessageService $requeueAbandonedJobMessageService
      * @param ManagerRegistry|null $managerRegistry
      */
@@ -33,19 +31,18 @@ class JobRequeue extends Command
     ) {
         parent::__construct();
         $this->requeueAbandonedJobMessageService = $requeueAbandonedJobMessageService;
-        $this->managerRegistry = $managerRegistry;
+        $this->setManagerRegistry($managerRegistry);
     }
 
     /**
+     * @throws \Shippinno\Job\Domain\Model\AbandonedJobMessageFailedToRequeueException
      * @throws \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
      */
     public function handle()
     {
         $id = intval($this->argument('id'));
         $this->requeueAbandonedJobMessageService->execute($id);
-        if (null !== $this->managerRegistry) {
-            $this->managerRegistry->getManager()->flush();
-        }
+        $this->flush();
         $this->info('Message has been successfully enqueued and the abandoned has been deleted.');
     }
 }

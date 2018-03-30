@@ -3,7 +3,6 @@
 namespace Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command;
 
 use Doctrine\Common\Persistence\ManagerRegistry;
-use Doctrine\ORM\EntityManager;
 use Illuminate\Console\Command;
 use LogicException;
 use Psr\Log\LoggerAwareTrait;
@@ -11,9 +10,11 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Shippinno\Job\Application\Messaging\EnqueueStoredJobsService;
 use Shippinno\Job\Domain\Model\FailedToEnqueueStoredJobException;
+use Shippinno\Job\Infrastructure\Persistence\Doctrine\ManagerRegistryAwareTrait;
 
 class JobEnqueue extends Command
 {
+    use ManagerRegistryAwareTrait;
     use LoggerAwareTrait;
 
     /**
@@ -27,11 +28,6 @@ class JobEnqueue extends Command
     private $service;
 
     /**
-     * @var ManagerRegistry|null
-     */
-    private $managerRegistry;
-
-    /**
      * @param EnqueueStoredJobsService $service
      * @param ManagerRegistry|null $managerRegistry
      * @param LoggerInterface|null $logger
@@ -43,7 +39,7 @@ class JobEnqueue extends Command
     ) {
         parent::__construct();
         $this->service = $service;
-        $this->managerRegistry = $managerRegistry;
+        $this->setManagerRegistry($managerRegistry);
         $this->setLogger(null !== $logger ? $logger : new NullLogger);
     }
 
@@ -55,15 +51,11 @@ class JobEnqueue extends Command
         }
         $testing = env('JOB_TESTING', false);
         do {
-            if (null !== $this->managerRegistry) {
-                $this->managerRegistry->getManager()->clear();
-            }
+            $this->clear();
             try {
                 $enqueuedMessagesCount = $this->service->execute($topic);
                 if ($enqueuedMessagesCount > 0) {
-                    if (null !== $this->managerRegistry) {
-                        $this->managerRegistry->getManager()->flush();
-                    }
+                    $this->flush();
                     $this->logger->debug(sprintf('%d jobs enqueued.', $enqueuedMessagesCount));
                 }
             } catch (FailedToEnqueueStoredJobException $e) {
