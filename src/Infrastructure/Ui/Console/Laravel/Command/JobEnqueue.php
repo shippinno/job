@@ -45,28 +45,52 @@ class JobEnqueue extends Command
 
     public function handle()
     {
-        $topic = env('JOB_ENQUEUE_TOPIC');
-        if (!$topic) {
-            throw new LogicException('The env JOB_ENQUEUE_TOPIC is not defined');
-        }
+        $topicName = $this->topicName();
         $testing = env('JOB_TESTING', false);
         do {
             $this->clear();
             try {
-                $enqueuedMessagesCount = $this->service->execute($topic);
-                if ($enqueuedMessagesCount > 0) {
-                    $this->flush();
-                    $this->logger->debug(sprintf('%d jobs enqueued.', $enqueuedMessagesCount));
-                }
+                $enqueuedMessagesCount = $this->service->execute($topicName);
+                $this->flushAndLog(
+                    $enqueuedMessagesCount > 0,
+                    sprintf('%d job(s) enqueued.', $enqueuedMessagesCount)
+                );
             } catch (FailedToEnqueueStoredJobException $e) {
                 $interval = !$testing ? 60 : 0;
                 $this->logger->alert(
                     sprintf('Failed to enqueue stored job, retrying in %d second(s).', $interval),
-                    ['exception' => $e,]
+                    ['exception' => $e]
                 );
                 sleep($interval);
                 continue;
             }
         } while (!$testing);
     }
+
+    /**
+     * @return string
+     */
+    private function topicName(): string
+    {
+        $topicName = env('JOB_ENQUEUE_TOPIC');
+        if (!$topicName) {
+            throw new LogicException('The env JOB_ENQUEUE_TOPIC is not defined');
+        }
+
+        return $topicName;
+    }
+
+    /**
+     * @param bool $condition
+     * @param string $logMessage
+     */
+    private function flushAndLog(bool $condition, string $logMessage): void
+    {
+        if (!$condition) {
+            return;
+        }
+        $this->flush();
+        $this->logger->debug($logMessage);
+    }
+
 }

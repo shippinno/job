@@ -44,15 +44,25 @@ class JobConsume extends Command
 
     public function handle()
     {
-        $queueName = env('JOB_CONSUME_QUEUE');
-        if (!$queueName) {
-            throw new LogicException('The env JOB_CONSUME_QUEUE is not defined');
-        }
+        $queueName = $this->queueName();
         $forever = !env('JOB_TESTING', false);
         do {
             $this->clear();
             $this->consumeStoredJobService->execute($queueName);
             $this->flush();
         } while ($forever);
+    }
+
+    /**
+     * @return string
+     */
+    private function queueName(): string
+    {
+        $queueName = env('JOB_CONSUME_QUEUE');
+        if (!$queueName) {
+            throw new LogicException('The env JOB_CONSUME_QUEUE is not defined');
+        }
+
+        return $queueName;
     }
 }
