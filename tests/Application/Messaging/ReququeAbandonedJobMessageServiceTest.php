@@ -3,10 +3,7 @@
 namespace Shippinno\Job\Test\Application\Messaging;
 
 use Enqueue\Null\NullContext;
-use Enqueue\Null\NullMessage;
-use Enqueue\Null\NullQueue;
 use Interop\Queue\InvalidMessageException;
-use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrProducer;
 use Interop\Queue\PsrQueue;
@@ -15,7 +12,6 @@ use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Messaging\RequeueAbandonedJobMessageService;
 use Shippinno\Job\Domain\Model\AbandonedJobMessage;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageFailedToRequeueException;
-use Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException;
 use Shippinno\Job\Test\Infrastructure\Domain\Model\InMemoryAbandonedJobMessageStore;
 
 class ReququeAbandonedJobMessageServiceTest extends TestCase

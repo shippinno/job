@@ -88,8 +88,8 @@ class ConsumeStoredJobService
             $this->abandonedJobMessageStore->add(
                 new AbandonedJobMessage($queueName, $message->getBody(), $e->__toString())
             );
-            $consumer->reject($message);
-            return;
+             $consumer->reject($message);
+             return;
         }
         try {
             $jobRunner->run($job);

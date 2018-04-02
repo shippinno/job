@@ -7,18 +7,27 @@ use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrProducer;
 use Interop\Queue\PsrTopic;
-use JMS\Serializer\Serializer;
-use JMS\Serializer\SerializerBuilder;
 use Shippinno\Job\Domain\Model\StoredJob;
 use Shippinno\Job\Domain\Model\JobStore;
 use Shippinno\Job\Domain\Model\FailedToEnqueueStoredJobException;
+use Shippinno\Job\Domain\Model\StoredJobSerializer;
 
 class EnqueueStoredJobsService
 {
     /**
+     * @var PsrContext
+     */
+    private $context;
+
+    /**
      * @var JobStore
      */
     protected $jobStore;
+
+    /**
+     * @var StoredJobSerializer
+     */
+    private $storedJobSerializer;
 
     /**
      * @var EnqueuedStoredJobTrackerStore
@@ -26,27 +35,20 @@ class EnqueueStoredJobsService
     protected $enqueuedStoredJobTrackerStore;
 
     /**
-     * @var PsrContext
-     */
-    private $context;
-
-    /**
-     * @var Serializer
-     */
-    private $serializer = null;
-
-    /**
      * @param PsrContext $context
      * @param JobStore $jobStore
+     * @param StoredJobSerializer $storedJobSerializer
      * @param EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore
      */
     public function __construct(
         PsrContext $context,
         JobStore $jobStore,
+        StoredJobSerializer $storedJobSerializer,
         EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore
     ) {
         $this->context = $context;
         $this->jobStore = $jobStore;
+        $this->storedJobSerializer = $storedJobSerializer;
         $this->enqueuedStoredJobTrackerStore = $enqueuedStoredJobTrackerStore;
     }
 
@@ -59,15 +61,12 @@ class EnqueueStoredJobsService
     {
         $enqueuedMessagesCount = 0;
         $lastEnqueuedStoredJob = null;
-
         $storedJobsToEnqueue = $this->getStoredJobsToEnqueue($topicName);
         if (0 === count($storedJobsToEnqueue)) {
             return $enqueuedMessagesCount;
         }
-
         $producer = $this->createProducer();
         $topic = $this->createTopic($topicName);
-
         try {
             foreach ($storedJobsToEnqueue as $storedJob) {
                 $message = $this->createMessage($storedJob);
@@ -124,25 +123,8 @@ class EnqueueStoredJobsService
      */
     protected function createMessage(StoredJob $storedJob): PsrMessage
     {
-        $message = $this->context->createMessage($this->serializer()->serialize($storedJob, 'json'));
+        $message = $this->context->createMessage($this->storedJobSerializer->serialize($storedJob));
 
         return $message;
     }
-
-    /**
-     * @return Serializer
-     */
-    private function serializer(): Serializer
-    {
-        if (null === $this->serializer) {
-            $this->serializer =
-                SerializerBuilder::create()
-                    ->addMetadataDir(__DIR__.'/../../Infrastructure/Serialization/JMS/Config')
-                    ->setCacheDir(__DIR__.'/../../../var/cache/jms-serializer')
-                    ->build();
-        }
-
-        return $this->serializer;
-    }
 }
-

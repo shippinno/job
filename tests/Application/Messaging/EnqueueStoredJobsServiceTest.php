@@ -4,7 +4,9 @@ namespace Shippinno\Job\Test\Application\Messaging;
 
 use DateTimeImmutable;
 use Enqueue\Null\NullContext;
+use Enqueue\Null\NullMessage;
 use Enqueue\Null\NullProducer;
+use Enqueue\Null\NullTopic;
 use Interop\Queue\InvalidMessageException;
 use Interop\Queue\PsrDestination;
 use Interop\Queue\PsrMessage;
@@ -13,7 +15,9 @@ use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Messaging\EnqueuedStoredJobTrackerStore;
 use Shippinno\Job\Application\Messaging\EnqueueStoredJobsService;
 use Shippinno\Job\Domain\Model\JobStore;
+use Shippinno\Job\Domain\Model\StoredJob;
 use Shippinno\Job\Test\Domain\Model\FakeStoredJob;
+use Shippinno\Job\Test\Domain\Model\SimpleStoredJobSerializer;
 
 class EnqueueStoredJobsServiceTest extends TestCase
 {
@@ -22,9 +26,10 @@ class EnqueueStoredJobsServiceTest extends TestCase
         $context = new NullContext;
         $jobStore = Mockery::mock(JobStore::class);
         $jobStore->shouldReceive(['storedJobsSince' => []]);
+        $storedJobSerializer = new SimpleStoredJobSerializer;
         $enqueuedStoredJobTrackerStore = Mockery::mock(EnqueuedStoredJobTrackerStore::class);
         $enqueuedStoredJobTrackerStore->shouldReceive(['lastEnqueuedStoredJobId' => 0]);
-        $service = new EnqueueStoredJobsService($context, $jobStore, $enqueuedStoredJobTrackerStore);
+        $service = new EnqueueStoredJobsService($context, $jobStore, $storedJobSerializer, $enqueuedStoredJobTrackerStore);
         $this->assertSame(0, $service->execute('topic_name'));
     }
 
@@ -41,6 +46,7 @@ class EnqueueStoredJobsServiceTest extends TestCase
             ->withArgs([null])
             ->once()
             ->andReturn($storedJobs);
+        $storedJobSerializer = new SimpleStoredJobSerializer;
         $enqueuedStoredJobTrackerStore = Mockery::mock(EnqueuedStoredJobTrackerStore::class);
         $enqueuedStoredJobTrackerStore
             ->shouldReceive(['lastEnqueuedStoredJobId' => null])
@@ -54,7 +60,7 @@ class EnqueueStoredJobsServiceTest extends TestCase
                     return 2 === $storedJob->id();
                 })
             ]);
-        $service = new EnqueueStoredJobsService($context, $jobStore, $enqueuedStoredJobTrackerStore);
+        $service = new EnqueueStoredJobsService($context, $jobStore, $storedJobSerializer, $enqueuedStoredJobTrackerStore);
         $this->assertSame(2, $service->execute('TOPIC'));
     }
 
@@ -67,7 +73,35 @@ class EnqueueStoredJobsServiceTest extends TestCase
             new FakeStoredJob('name', 'body', new DateTimeImmutable, 1),
             new FakeStoredJob('name', 'body', new DateTimeImmutable, 2)
         ];
-        $context = new ContextThatCreatesProducerThatFailsToSendSecondMessage();
+        $storedJobSerializer = new SimpleStoredJobSerializer;
+        $producer = Mockery::mock(NullProducer::class);
+        $producer
+            ->shouldReceive('send')
+            ->once()
+            ->withArgs([
+                Mockery::on(function (NullTopic $topic) {
+                    return 'TOPIC' === $topic->getTopicName();
+                }),
+                Mockery::on(function (NullMessage $message) use ($storedJobSerializer) {
+                    return 1 === $storedJobSerializer->deserialize($message->getBody())->id();
+                }),
+            ])
+            ->shouldReceive('send')
+            ->once()
+            ->withArgs([
+                Mockery::on(function (NullTopic $topic) {
+                    return 'TOPIC' === $topic->getTopicName();
+                }),
+                Mockery::on(function (NullMessage $message) use ($storedJobSerializer) {
+                    return 2 === $storedJobSerializer->deserialize($message->getBody())->id();
+                }),
+            ])
+            ->andThrow(new InvalidMessageException);
+        $context = Mockery::mock(NullContext::class)->makePartial();
+        $context
+            ->shouldReceive('createProducer')
+            ->once()
+            ->andReturn($producer);
         $jobStore = Mockery::mock(JobStore::class);
         $jobStore->shouldReceive([
             'storedJobsSince' => $storedJobs,
@@ -81,31 +115,11 @@ class EnqueueStoredJobsServiceTest extends TestCase
                 Mockery::on(function (string $topic) {
                     return 'TOPIC' === $topic;
                 }),
-                Mockery::on(function (FakeStoredJob $storedJob) {
+                Mockery::on(function (StoredJob $storedJob) {
                     return 1 === $storedJob->id();
                 })
             ]);
-
-        $service = new EnqueueStoredJobsService($context, $jobStore, $enqueuedStoredJobTrackerStore);
+        $service = new EnqueueStoredJobsService($context, $jobStore, $storedJobSerializer, $enqueuedStoredJobTrackerStore);
         $service->execute('TOPIC');
-    }
-}
-
-class ContextThatCreatesProducerThatFailsToSendSecondMessage extends NullContext
-{
-    public function createProducer()
-    {
-        return new ProducerThatFailsToSendSecondMessage;
-    }
-}
-
-class ProducerThatFailsToSendSecondMessage extends NullProducer
-{
-    public function send(PsrDestination $destination, PsrMessage $message)
-    {
-        if (2 === json_decode($message->getBody())->id) {
-            throw new InvalidMessageException();
-        }
-        parent::send($destination, $message);
     }
 }
