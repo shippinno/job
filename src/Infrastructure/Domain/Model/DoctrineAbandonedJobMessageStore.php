@@ -28,7 +28,7 @@ class DoctrineAbandonedJobMessageStore extends EntityRepository implements Aband
      */
     public function all(): array
     {
-        return $this->findAll();
+        return $this->createQueryBuilder('m')->orderBy('m.id')->getQuery()->getResult();
     }
 
     /**
