@@ -5,6 +5,9 @@ namespace Shippinno\Job\Application\Messaging;
 use Enqueue\Sqs\SqsMessage;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Shippinno\Job\Application\Job\JobRunnerRegistry;
 use Shippinno\Job\Domain\Model\AbandonedJobMessage;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageStore;
@@ -16,6 +19,8 @@ use Shippinno\Job\Domain\Model\StoredJobSerializer;
 
 class ConsumeStoredJobService
 {
+    use LoggerAwareTrait;
+
     /**
      * @var StoredJobSerializer
      */
@@ -53,6 +58,7 @@ class ConsumeStoredJobService
      * @param JobRunnerRegistry $jobRunnerRegistry
      * @param JobStore $jobStore
      * @param AbandonedJobMessageStore $abandonedJobMessageStore
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         PsrContext $context,
@@ -60,7 +66,8 @@ class ConsumeStoredJobService
         JobSerializer $jobSerializer,
         JobRunnerRegistry $jobRunnerRegistry,
         JobStore $jobStore,
-        AbandonedJobMessageStore $abandonedJobMessageStore
+        AbandonedJobMessageStore $abandonedJobMessageStore,
+        LoggerInterface $logger = null
     ) {
         $this->context = $context;
         $this->storedJobSerializer = $storedJobSerializer;
@@ -68,6 +75,7 @@ class ConsumeStoredJobService
         $this->jobRunnerRegistry = $jobRunnerRegistry;
         $this->jobStore = $jobStore;
         $this->abandonedJobMessageStore = $abandonedJobMessageStore;
+        $this->setLogger(null !== $logger ? $logger : new NullLogger);
     }
 
     /**
@@ -78,6 +86,7 @@ class ConsumeStoredJobService
         $consumer = $this->context->createConsumer($this->context->createQueue($queueName));
         $message = $consumer->receive();
         if (null === $message) {
+            $this->logger->alert('Received message is null.');
             return;
         }
         $storedJob = $this->storedJobSerializer->deserialize($message->getBody());
@@ -88,8 +97,9 @@ class ConsumeStoredJobService
             $this->abandonedJobMessageStore->add(
                 new AbandonedJobMessage($queueName, $message->getBody(), $e->__toString())
             );
-             $consumer->reject($message);
-             return;
+            $consumer->reject($message);
+            $this->logger->alert('No JobRunner is registered. Message is abandoned.', ['message' => $message->getBody()]);
+            return;
         }
         try {
             $jobRunner->run($job);
@@ -100,13 +110,15 @@ class ConsumeStoredJobService
                 }
             }
             $consumer->acknowledge($message);
+            $this->logger->info('Message has been acknowledged.', ['message' => $message->getBody()]);
         } catch (JobFailedException $e) {
             $attempts = $message->getProperty('attempts', 0) + 1;
-            if ($attempts > $job->maxAttempts()) {
+            if ($attempts >= $job->maxAttempts()) {
                 $this->abandonedJobMessageStore->add(
                     new AbandonedJobMessage($queueName, $message->getBody(), $e->__toString())
                 );
                 $consumer->reject($message);
+                $this->logger->info('Message has been rejected reaching the max attempts.', ['message' => $message->getBody()]);
                 return;
             }
             $message->setProperty('attempts', $attempts);
@@ -114,6 +126,7 @@ class ConsumeStoredJobService
                 $message = $this->delayMessage($message, $job->reattemptDelay());
             }
             $consumer->reject($message, true);
+            $this->logger->info('Message has been requeued', ['message' => $message->getBody()]);
         }
     }
 
