@@ -9,3 +9,5 @@ Shippinno\Job\Domain\Model\StoredJob:
             type: string
         createdAt:
             type: DateTimeImmutable
+        fifoGroupId:
+            type: string

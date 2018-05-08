@@ -27,15 +27,21 @@ class StoredJob
     private $createdAt;
 
     /**
+     * @var string|null
+     */
+    private $fifoGroupId;
+
+    /**
      * @param string $name
      * @param string $body
      * @param DateTimeImmutable $createdAt
      */
-    public function __construct(string $name, string $body, DateTimeImmutable $createdAt)
+    public function __construct(string $name, string $body, DateTimeImmutable $createdAt, string $fifoGroupId = null)
     {
         $this->name = $name;
         $this->body = $body;
         $this->createdAt = $createdAt;
+        $this->fifoGroupId = $fifoGroupId;
     }
 
     /**
@@ -68,5 +74,13 @@ class StoredJob
     public function createdAt(): DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function fifoGroupId(): ?string
+    {
+        return $this->fifoGroupId;
     }
 }

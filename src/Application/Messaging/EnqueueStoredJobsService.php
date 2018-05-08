@@ -70,6 +70,12 @@ class EnqueueStoredJobsService
         try {
             foreach ($storedJobsToEnqueue as $storedJob) {
                 $message = $this->createMessage($storedJob);
+                if (method_exists($message, 'setMessageDeduplicationId')) {
+                    $message->setMessageDeduplicationId(uniqid());
+                }
+                if (method_exists($message, 'setMessageGroupId')) {
+                    $message->setMessageGroupId($storedJob->fifoGroupId());
+                }
                 $producer->send($topic, $message);
                 $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
                 $lastEnqueuedStoredJob = $storedJob;

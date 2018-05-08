@@ -36,7 +36,8 @@ class DoctrineJobStore extends EntityRepository implements JobStore
         $storedJob = new StoredJob(
             get_class($job),
             $this->jobSerializer->serialize($job),
-            $job->createdAt()
+            $job->createdAt(),
+            $job->fifoGroupId()
         );
         $this->getEntityManager()->persist($storedJob);
     }

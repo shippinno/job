@@ -16,14 +16,24 @@ abstract class Job
      */
     protected $reattemptDelay = 0;
 
+
+    /**
+     * @var null|string
+     */
+    protected $fifoGroupId;
+
     /**
      * @var DateTimeImmutable
      */
     protected $createdAt;
 
+    /**
+     * @return void
+     */
     public function __construct()
     {
         $this->createdAt = new DateTimeImmutable;
+        $this->setFifoGroupId();
     }
 
     /**
@@ -56,6 +66,22 @@ abstract class Job
     public function setReattemptDelay(int $reattemptDelay): void
     {
         $this->reattemptDelay = $reattemptDelay;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function fifoGroupId(): ?string
+    {
+        return $this->fifoGroupId;
+    }
+
+    /**
+     *
+     */
+    protected function setFifoGroupId(): void
+    {
+        $this->fifoGroupId = null;
     }
 
     /**
