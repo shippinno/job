@@ -16,16 +16,15 @@ abstract class Job
      */
     protected $reattemptDelay = 0;
 
+    /**
+     * @var DateTimeImmutable
+     */
+    protected $createdAt;
 
     /**
      * @var null|string
      */
     protected $fifoGroupId;
-
-    /**
-     * @var DateTimeImmutable
-     */
-    protected $createdAt;
 
     /**
      * @return void
@@ -69,6 +68,14 @@ abstract class Job
     }
 
     /**
+     * @return DateTimeImmutable
+     */
+    public function createdAt(): DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    /**
      * @return null|string
      */
     public function fifoGroupId(): ?string
@@ -77,20 +84,13 @@ abstract class Job
     }
 
     /**
-     *
+     * @return void
      */
     protected function setFifoGroupId(): void
     {
         $this->fifoGroupId = null;
     }
 
-    /**
-     * @return DateTimeImmutable
-     */
-    public function createdAt(): DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
 
     /**
      * @return Job[]
