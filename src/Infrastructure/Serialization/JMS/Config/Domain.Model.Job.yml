@@ -7,3 +7,5 @@ Shippinno\Job\Domain\Model\Job:
             type: integer
         createdAt:
             type: DateTimeImmutable
+        fifoGroupId:
+            type: string
