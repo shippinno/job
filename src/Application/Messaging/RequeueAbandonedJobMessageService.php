@@ -41,6 +41,9 @@ class RequeueAbandonedJobMessageService
         $abandonedJobMessage = $this->abandonedJobMessageStore->abandonedJobMessageOfId($abandonedJobMessageId);
         $queue = $this->context->createQueue($abandonedJobMessage->queue());
         $message = $this->context->createMessage($abandonedJobMessage->message());
+        if (method_exists($message, 'setMessageDeduplicationId')) {
+            $message->setMessageDeduplicationId(uniqid());
+        }
         if (method_exists($message, 'setMessageGroupId')) {
             $message->setMessageGroupId(uniqid());
         }
