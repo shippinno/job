@@ -2,7 +2,7 @@
 
 namespace Shippinno\Job\Application\Messaging;
 
-use Interop\Queue\Exception as QueueException;
+use Exception;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrProducer;
@@ -80,7 +80,7 @@ class EnqueueStoredJobsService
                 $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
                 $lastEnqueuedStoredJob = $storedJob;
             }
-        } catch (QueueException $e) {
+        } catch (Exception $e) {
             throw new FailedToEnqueueStoredJobException($e);
         } finally {
             if (null !== $lastEnqueuedStoredJob) {
