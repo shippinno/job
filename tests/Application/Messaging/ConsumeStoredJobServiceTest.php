@@ -130,6 +130,7 @@ class ConsumeStoredJobServiceTest extends TestCase
         $reattemptDelay = 600;
         $job = new FakeJob(true);
         $job->setReattemptDelay($reattemptDelay);
+        $job->setMaxAttempts(2);
         $identifier = uniqid();
         $message = $this->createMessage($identifier, $job, 0, SqsMessage::class);
         $consumer = $this->createConsumer($message);

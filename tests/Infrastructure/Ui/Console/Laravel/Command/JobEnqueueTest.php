@@ -46,8 +46,9 @@ class JobEnqueueTest extends TestCase
         $service
             ->shouldReceive('execute')
             ->once()
-            ->andThrow(new FailedToEnqueueStoredJobException);
+            ->andThrow(new FailedToEnqueueStoredJobException(3));
         $entityManager = Mockery::mock(EntityManager::class);
+        $entityManager->shouldReceive('flush')->once();
         $entityManager
             ->shouldReceive('clear')
             ->once();
@@ -57,9 +58,14 @@ class JobEnqueueTest extends TestCase
         $command = new JobEnqueue($service, $managerRegistry, $logger);
         $command->setLaravel(new Container);
         $command->run(new ArrayInput([]), new DummyOutput);
+        $logCalls = $logger->getLogCalls()->getIterator();
+        $this->assertSame(
+            '3 job(s) enqueued.',
+            $logCalls[0]->getMessage()
+        );
         $this->assertSame(
             'Failed to enqueue stored job, retrying in 0 second(s).',
-            $logger->getFirstLogCall()->getMessage()
+            $logCalls[1]->getMessage()
         );
     }
 

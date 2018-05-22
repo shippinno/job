@@ -56,6 +56,11 @@ class JobEnqueue extends Command
                     sprintf('%d job(s) enqueued.', $enqueuedMessagesCount)
                 );
             } catch (FailedToEnqueueStoredJobException $e) {
+                $enqueuedMessagesCount = $e->enqueuedMessagesCount();
+                $this->flushAndLog(
+                    $enqueuedMessagesCount > 0,
+                    sprintf('%d job(s) enqueued.', $enqueuedMessagesCount)
+                );
                 $interval = !$testing ? 60 : 0;
                 $this->logger->alert(
                     sprintf('Failed to enqueue stored job, retrying in %d second(s).', $interval),

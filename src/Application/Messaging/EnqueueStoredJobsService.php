@@ -2,7 +2,6 @@
 
 namespace Shippinno\Job\Application\Messaging;
 
-use Exception;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrProducer;
@@ -11,6 +10,7 @@ use Shippinno\Job\Domain\Model\StoredJob;
 use Shippinno\Job\Domain\Model\JobStore;
 use Shippinno\Job\Domain\Model\FailedToEnqueueStoredJobException;
 use Shippinno\Job\Domain\Model\StoredJobSerializer;
+use Throwable;
 
 class EnqueueStoredJobsService
 {
@@ -80,8 +80,8 @@ class EnqueueStoredJobsService
                 $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
                 $lastEnqueuedStoredJob = $storedJob;
             }
-        } catch (Exception $e) {
-            throw new FailedToEnqueueStoredJobException($e);
+        } catch (Throwable $e) {
+            throw new FailedToEnqueueStoredJobException($enqueuedMessagesCount, $e);
         } finally {
             if (null !== $lastEnqueuedStoredJob) {
                 $this->enqueuedStoredJobTrackerStore->trackLastEnqueuedStoredJob($topicName, $lastEnqueuedStoredJob);

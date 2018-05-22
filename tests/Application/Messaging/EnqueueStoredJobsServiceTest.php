@@ -7,9 +7,7 @@ use Enqueue\Null\NullContext;
 use Enqueue\Null\NullMessage;
 use Enqueue\Null\NullProducer;
 use Enqueue\Null\NullTopic;
-use Interop\Queue\InvalidMessageException;
-use Interop\Queue\PsrDestination;
-use Interop\Queue\PsrMessage;
+use Exception;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Messaging\EnqueuedStoredJobTrackerStore;
@@ -96,7 +94,7 @@ class EnqueueStoredJobsServiceTest extends TestCase
                     return 2 === $storedJobSerializer->deserialize($message->getBody())->id();
                 }),
             ])
-            ->andThrow(new InvalidMessageException);
+            ->andThrow(new Exception);
         $context = Mockery::mock(NullContext::class)->makePartial();
         $context
             ->shouldReceive('createProducer')
