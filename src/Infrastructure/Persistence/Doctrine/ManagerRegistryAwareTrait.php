@@ -3,6 +3,7 @@
 namespace Shippinno\Job\Infrastructure\Persistence\Doctrine;
 
 use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManager;
 
 trait ManagerRegistryAwareTrait
 {
@@ -25,7 +26,14 @@ trait ManagerRegistryAwareTrait
     public function flush(): void
     {
         if ($this->hasEntityManager()) {
-            $this->managerRegistry->getManager()->flush();
+            /** @var EntityManager $entityManager */
+            $entityManager =  $this->managerRegistry->getManager();
+            $connection = $entityManager->getConnection();
+            if (!$connection->ping()) {
+                $connection->close();
+                $connection->connect();
+            }
+            $entityManager->flush();
         }
     }
 
