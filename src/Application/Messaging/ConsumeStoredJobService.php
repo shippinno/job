@@ -84,7 +84,7 @@ class ConsumeStoredJobService
     public function execute(string $queueName): void
     {
         $consumer = $this->context->createConsumer($this->context->createQueue($queueName));
-        $message = $consumer->receive();
+        $message = $consumer->receive(5000);
         if (null === $message) {
             $this->logger->alert('Received message is null.');
             return;
