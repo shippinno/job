@@ -43,13 +43,6 @@ trait ManagerRegistryAwareTrait
     public function clear(): void
     {
         if ($this->hasEntityManager()) {
-            /** @var EntityManager $entityManager */
-            $entityManager =  $this->managerRegistry->getManager();
-            $connection = $entityManager->getConnection();
-            if (!$connection->ping()) {
-                $connection->close();
-                $connection->connect();
-            }
             $this->managerRegistry->getManager()->clear();
         }
     }

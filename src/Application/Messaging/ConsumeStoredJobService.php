@@ -86,7 +86,6 @@ class ConsumeStoredJobService
         $consumer = $this->context->createConsumer($this->context->createQueue($queueName));
         $message = $consumer->receive(5000);
         if (null === $message) {
-            $this->logger->alert('Received message is null.');
             return;
         }
         $storedJob = $this->storedJobSerializer->deserialize($message->getBody());
