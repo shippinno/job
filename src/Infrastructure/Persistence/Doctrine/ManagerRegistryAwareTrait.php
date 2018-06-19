@@ -26,14 +26,15 @@ trait ManagerRegistryAwareTrait
     public function flush(): void
     {
         if ($this->hasEntityManager()) {
-            /** @var EntityManager $entityManager */
-            $entityManager =  $this->managerRegistry->getManager();
-            $connection = $entityManager->getConnection();
-            if (!$connection->ping()) {
-                $connection->close();
-                $connection->connect();
+            foreach ($this->managerRegistry->getManagers() as $entityManager) {
+                /** @var EntityManager $entityManager */
+                $connection = $entityManager->getConnection();
+                if (!$connection->ping()) {
+                    $connection->close();
+                    $connection->connect();
+                }
+                $entityManager->flush();
             }
-            $entityManager->flush();
         }
     }
 
