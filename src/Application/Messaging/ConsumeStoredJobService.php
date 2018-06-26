@@ -127,8 +127,8 @@ class ConsumeStoredJobService
             if (method_exists($message, 'setMessageDeduplicationId')) {
                 $message->setMessageDeduplicationId(uniqid());
             }
-            if (method_exists($message, 'setMessageGroupId') && method_exists($message, 'getMessageGroupId')) {
-                $message->setMessageGroupId(is_null($message->getMessageGroupId()) ? uniqid() : $message->getMessageGroupId());
+            if (method_exists($message, 'setMessageGroupId')) {
+                $message->setMessageGroupId(is_null($storedJob->fifoGroupId()) ? uniqid() : $storedJob->fifoGroupId());
             }
             $consumer->reject($message, true);
             $this->logger->info('Message has been requeued', ['message' => $message->getBody()]);
