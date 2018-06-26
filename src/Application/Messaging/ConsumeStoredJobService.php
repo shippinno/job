@@ -124,6 +124,12 @@ class ConsumeStoredJobService
             if ($job->reattemptDelay() > 0) {
                 $message = $this->delayMessage($message, $job->reattemptDelay());
             }
+            if (method_exists($message, 'setMessageDeduplicationId')) {
+                $message->setMessageDeduplicationId(uniqid());
+            }
+            if (method_exists($message, 'setMessageGroupId')) {
+                $message->setMessageGroupId(is_null($storedJob->fifoGroupId()) ? uniqid() : $storedJob->fifoGroupId());
+            }
             $consumer->reject($message, true);
             $this->logger->info('Message has been requeued', ['message' => $message->getBody()]);
         }
