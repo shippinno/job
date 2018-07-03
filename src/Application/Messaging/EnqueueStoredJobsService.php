@@ -74,7 +74,11 @@ class EnqueueStoredJobsService
                     $message->setMessageDeduplicationId(uniqid());
                 }
                 if (method_exists($message, 'setMessageGroupId')) {
-                    $message->setMessageGroupId(is_null($storedJob->fifoGroupId()) ? uniqid() : $storedJob->fifoGroupId());
+                    $message->setMessageGroupId(
+                        is_null($storedJob->fifoGroupId())
+                            ? uniqid()
+                            : $storedJob->fifoGroupId()
+                    );
                 }
                 $producer->send($topic, $message);
                 $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
