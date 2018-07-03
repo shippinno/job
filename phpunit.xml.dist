@@ -20,7 +20,7 @@
              target="./build/coverage/log/coverage.xml"/>
     </logging>
     <testsuites>
-        <testsuite>
+        <testsuite name="tests">
             <directory suffix=".php">./tests/</directory>
         </testsuite>
     </testsuites>
