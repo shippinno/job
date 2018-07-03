@@ -10,6 +10,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Shippinno\Job\Application\Messaging\ConsumeStoredJobService;
 use Shippinno\Job\Infrastructure\Persistence\Doctrine\ManagerRegistryAwareTrait;
+use Throwable;
 
 class JobConsume extends Command
 {
@@ -48,8 +49,14 @@ class JobConsume extends Command
         $forever = !env('JOB_TESTING', false);
         do {
             $this->clear();
-            $this->consumeStoredJobService->execute($queueName);
-            $this->flush();
+            $this->consumeStoredJobService->execute($queueName, function () {
+                try {
+                    $this->flush();
+                } catch (Throwable $e) {
+                    return false;
+                }
+                return true;
+            });
         } while ($forever);
     }
 

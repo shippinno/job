@@ -25,7 +25,7 @@ trait ManagerRegistryAwareTrait
      */
     public function flush(): void
     {
-        if ($this->hasEntityManager()) {
+        if ($this->hasManagerRegistry()) {
             foreach ($this->managerRegistry->getManagers() as $entityManager) {
                 /** @var EntityManager $entityManager */
                 $connection = $entityManager->getConnection();
@@ -34,6 +34,7 @@ trait ManagerRegistryAwareTrait
                     $connection->connect();
                 }
                 $entityManager->flush();
+
             }
         }
     }
@@ -43,15 +44,17 @@ trait ManagerRegistryAwareTrait
      */
     public function clear(): void
     {
-        if ($this->hasEntityManager()) {
-            $this->managerRegistry->getManager()->clear();
+        if ($this->hasManagerRegistry()) {
+            foreach ($this->managerRegistry->getManagers() as $entityManager) {
+                $entityManager->clear();
+            }
         }
     }
 
     /**
      * @return bool
      */
-    protected function hasEntityManager(): bool
+    protected function hasManagerRegistry(): bool
     {
         return null !== $this->managerRegistry;
     }

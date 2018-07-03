@@ -100,8 +100,12 @@ class ConsumeStoredJobServiceTest extends TestCase
             ->once();
         $context = $this->createContext($consumer);
         $service = $this->createService($context);
-        $service->execute(self::QUEUE_NAME);
-        $this->assertTrue(true);
+        $persistCalled = false;
+        $service->execute(self::QUEUE_NAME, function () use (&$persistCalled) {
+            $persistCalled = true;
+            return true;
+        });
+        $this->assertTrue($persistCalled);
     }
 
     public function testItShouldAcknowledgeAndStoreDependentJobIfSucceeded()
@@ -123,6 +127,30 @@ class ConsumeStoredJobServiceTest extends TestCase
         $service = $this->createService($context, count($job->dependentJobs()));
         $service->execute(self::QUEUE_NAME);
         $this->assertCount(0, $this->abandonedJobMessageStore->all());
+    }
+
+    public function testItShouldRequeueIfFailedToPersist()
+    {
+        $job = new NullJob;
+        $identifier = uniqid();
+        $message = $this->createMessage($identifier, $job);
+        $consumer = $this->createConsumer($message);
+        $consumer
+            ->shouldReceive('reject')
+            ->once()
+            ->withArgs([
+                Mockery::on(function (NullMessage $message) use ($identifier) {
+                    return $message->getProperty('identifier') === $identifier;
+                }),
+                true
+            ])
+            ->once();
+        $context = $this->createContext($consumer);
+        $service = $this->createService($context);
+        $service->execute(self::QUEUE_NAME, function () {
+            return false;
+        });
+        $this->assertTrue(true);
     }
 
     public function testItShouldRequeueIfFailedAndMaxAttemptsNotExceeded()

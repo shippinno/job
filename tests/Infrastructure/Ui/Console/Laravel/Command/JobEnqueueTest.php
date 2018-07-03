@@ -47,15 +47,15 @@ class JobEnqueueTest extends TestCase
             ->shouldReceive('execute')
             ->once()
             ->andThrow(new FailedToEnqueueStoredJobException(3));
-        $entityManager = Mockery::mock(EntityManager::class);
-        $entityManager->shouldReceive('flush')->once();
-        $entityManager
-            ->shouldReceive('clear')
-            ->once();
-        $managerRegistry = Mockery::mock(ManagerRegistry::class);
-        $managerRegistry->shouldReceive(['getManager' => $entityManager]);
+//        $entityManager = Mockery::mock(EntityManager::class);
+//        $entityManager->shouldReceive('flush')->once();
+//        $entityManager
+//            ->shouldReceive('clear')
+//            ->once();
+//        $managerRegistry = Mockery::mock(ManagerRegistry::class);
+//        $managerRegistry->shouldReceive(['getManagers' => [$entityManager]]);
         $logger = new LoggerSpy;
-        $command = new JobEnqueue($service, $managerRegistry, $logger);
+        $command = new JobEnqueue($service, null, $logger);
         $command->setLaravel(new Container);
         $command->run(new ArrayInput([]), new DummyOutput);
         $logCalls = $logger->getLogCalls()->getIterator();
@@ -76,15 +76,15 @@ class JobEnqueueTest extends TestCase
             ->shouldReceive('execute')
             ->once()
             ->andReturn(1);
-        $entityManager = Mockery::mock(EntityManager::class);
-        $entityManager
-            ->shouldReceive('clear')
-            ->once()
-            ->shouldReceive('flush')
-            ->once();
-        $managerRegistry = Mockery::mock(ManagerRegistry::class);
-        $managerRegistry->shouldReceive(['getManager' => $entityManager]);
-        $command = new JobEnqueue($service, $managerRegistry);
+//        $entityManager = Mockery::mock(EntityManager::class);
+//        $entityManager
+//            ->shouldReceive('clear')
+//            ->once()
+//            ->shouldReceive('flush')
+//            ->once();
+//        $managerRegistry = Mockery::mock(ManagerRegistry::class);
+//        $managerRegistry->shouldReceive(['getManagers' => [$entityManager]]);
+        $command = new JobEnqueue($service);
         $command->setLaravel(new Container);
         $command->run(new ArrayInput([]), new DummyOutput);
         $this->assertTrue(true);

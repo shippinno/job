@@ -2,6 +2,7 @@
 
 namespace Shippinno\Job\Application\Messaging;
 
+use Closure;
 use Enqueue\Sqs\SqsMessage;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
@@ -80,8 +81,9 @@ class ConsumeStoredJobService
 
     /**
      * @param string $queueName
+     * @param Closure|null $onSuccess
      */
-    public function execute(string $queueName): void
+    public function execute(string $queueName, Closure $persist = null): void
     {
         $consumer = $this->context->createConsumer($this->context->createQueue($queueName));
         $message = $consumer->receive(5000);
@@ -96,28 +98,42 @@ class ConsumeStoredJobService
             $this->abandonedJobMessageStore->add(
                 new AbandonedJobMessage($queueName, $message->getBody(), $e->__toString())
             );
+            $this->logger->alert(
+                'No JobRunner is registered. Message is abandoned. Rejecting the message.',
+                ['message' => $message->getBody()]
+            );
             $consumer->reject($message);
-            $this->logger->alert('No JobRunner is registered. Message is abandoned.', ['message' => $message->getBody()]);
             return;
         }
         try {
             $jobRunner->run($job);
+            if (!is_null($persist) && !$persist()) {
+                $this->logger->info(
+                    'Persistence failed after the job. Requeueing the message.',
+                    ['message' => $message->getBody()]
+                );
+                $consumer->reject($message, true);
+                return;
+            }
             $dependentJobs = $job->dependentJobs();
             if (count($dependentJobs) > 0) {
                 foreach ($dependentJobs as $dependentJob) {
                     $this->jobStore->append($dependentJob);
                 }
             }
+            $this->logger->info('Acknowledging message.', ['message' => $message->getBody()]);
             $consumer->acknowledge($message);
-            $this->logger->info('Message has been acknowledged.', ['message' => $message->getBody()]);
         } catch (JobFailedException $e) {
             $attempts = $message->getProperty('attempts', 0) + 1;
             if ($attempts >= $job->maxAttempts()) {
                 $this->abandonedJobMessageStore->add(
                     new AbandonedJobMessage($queueName, $message->getBody(), $e->__toString())
                 );
+                $this->logger->info(
+                    'Rejecting the message reaching the max attempts.',
+                    ['message' => $message->getBody()]
+                );
                 $consumer->reject($message);
-                $this->logger->info('Message has been rejected reaching the max attempts.', ['message' => $message->getBody()]);
                 return;
             }
             $message->setProperty('attempts', $attempts);
@@ -130,8 +146,8 @@ class ConsumeStoredJobService
             if (method_exists($message, 'setMessageGroupId')) {
                 $message->setMessageGroupId(is_null($storedJob->fifoGroupId()) ? uniqid() : $storedJob->fifoGroupId());
             }
+            $this->logger->info('Requeueing the message.', ['message' => $message->getBody()]);
             $consumer->reject($message, true);
-            $this->logger->info('Message has been requeued', ['message' => $message->getBody()]);
         }
     }
 

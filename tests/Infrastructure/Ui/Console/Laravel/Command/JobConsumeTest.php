@@ -41,15 +41,15 @@ class JobConsumeTest extends TestCase
         $consumeStoredJobService
             ->shouldReceive('execute')
             ->once();
-        $entityManager = Mockery::mock(EntityManager::class);
-        $entityManager
-            ->shouldReceive('clear')
-            ->once()
-            ->shouldReceive('flush')
-            ->once();
-        $managerRegistry = Mockery::mock(ManagerRegistry::class);
-        $managerRegistry->shouldReceive(['getManager' => $entityManager]);
-        $jobConsume = new JobConsume($consumeStoredJobService, $managerRegistry);
+//        $entityManager = Mockery::mock(EntityManager::class);
+//        $entityManager
+//            ->shouldReceive('clear')
+//            ->once()
+//            ->shouldReceive('flush')
+//            ->once();
+//        $managerRegistry = Mockery::mock(ManagerRegistry::class);
+//        $managerRegistry->shouldReceive(['getManagers' => [$entityManager]]);
+        $jobConsume = new JobConsume($consumeStoredJobService);
         $jobConsume->handle();
         $this->assertTrue(true);
     }

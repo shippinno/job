@@ -18,13 +18,13 @@ class JobAbandonedDeleteTest extends TestCase
 {
     public function testThatServiceIsExecuted()
     {
-        $entityManager = Mockery::mock(EntityManager::class);
-        $entityManager->shouldReceive('flush')->once();
-        $managerRegistry = Mockery::mock(ManagerRegistry::class);
-        $managerRegistry->shouldReceive(['getManager' => $entityManager]);
+//        $entityManager = Mockery::mock(EntityManager::class);
+//        $entityManager->shouldReceive('flush')->once();
+//        $managerRegistry = Mockery::mock(ManagerRegistry::class);
+//        $managerRegistry->shouldReceive(['getManagers' => [$entityManager]]);
         $service = Mockery::mock(DeleteAbandonedJobMessageService::class);
         $service->shouldReceive('execute')->once()->withArgs([1]);
-        $command = new JobAbandonedDelete($service, $managerRegistry);
+        $command = new JobAbandonedDelete($service);
         $command->setLaravel(new Container);
         $inputDefinition = new InputDefinition([new InputArgument('id')]);
         $input = new ArrayInput(['id' => '1'], $inputDefinition);
