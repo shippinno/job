@@ -12,8 +12,6 @@ class FailedToEnqueueStoredJobException extends Exception
     private $enqueuedMessagesCount;
 
     /**
-     * @param string $message
-     * @param int $code
      * @param int $enqueuedMessagesCount
      * @param Throwable|null $previous
      */

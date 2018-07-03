@@ -12,7 +12,7 @@ class DoctrineAbandonedJobMessageStore extends EntityRepository implements Aband
     /**
      * {@inheritdoc}
      */
-    public function abandonedJobMessageOfId(int $id): ?AbandonedJobMessage
+    public function abandonedJobMessageOfId(int $id): AbandonedJobMessage
     {
         /** @var null|AbandonedJobMessage $abandonedJobMessage */
         $abandonedJobMessage = $this->find($id);

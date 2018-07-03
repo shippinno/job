@@ -34,7 +34,6 @@ trait ManagerRegistryAwareTrait
                     $connection->connect();
                 }
                 $entityManager->flush();
-
             }
         }
     }

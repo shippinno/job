@@ -5,6 +5,7 @@ namespace Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Illuminate\Console\Command;
 use Shippinno\Job\Application\Messaging\DeleteAbandonedJobMessageService;
+use Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException;
 use Shippinno\Job\Infrastructure\Persistence\Doctrine\ManagerRegistryAwareTrait;
 
 class JobAbandonedDelete extends Command
@@ -35,7 +36,7 @@ class JobAbandonedDelete extends Command
     }
 
     /**
-     * @throws \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
+     * @throws AbandonedJobMessageNotFoundException
      */
     public function handle()
     {

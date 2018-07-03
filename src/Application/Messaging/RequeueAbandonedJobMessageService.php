@@ -5,6 +5,7 @@ namespace Shippinno\Job\Application\Messaging;
 use Interop\Queue\Exception as QueueException;
 use Interop\Queue\PsrContext;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageFailedToRequeueException;
+use Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageStore;
 
 class RequeueAbandonedJobMessageService
@@ -34,7 +35,7 @@ class RequeueAbandonedJobMessageService
     /**
      * @param int $abandonedJobMessageId
      * @throws AbandonedJobMessageFailedToRequeueException
-     * @throws \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
+     * @throws AbandonedJobMessageNotFoundException
      */
     public function execute(int $abandonedJobMessageId): void
     {

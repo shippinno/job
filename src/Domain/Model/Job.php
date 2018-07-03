@@ -26,9 +26,6 @@ abstract class Job
      */
     protected $fifoGroupId;
 
-    /**
-     * @return void
-     */
     public function __construct()
     {
         $this->createdAt = new DateTimeImmutable;

@@ -81,7 +81,7 @@ class ConsumeStoredJobService
 
     /**
      * @param string $queueName
-     * @param Closure|null $onSuccess
+     * @param Closure|null $persist
      */
     public function execute(string $queueName, Closure $persist = null): void
     {

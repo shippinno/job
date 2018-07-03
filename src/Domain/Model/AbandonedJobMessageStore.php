@@ -6,10 +6,10 @@ interface AbandonedJobMessageStore
 {
     /**
      * @param int $id
-     * @return null|AbandonedJobMessage
+     * @return AbandonedJobMessage
      * @throws AbandonedJobMessageNotFoundException
      */
-    public function abandonedJobMessageOfId(int $id): ?AbandonedJobMessage;
+    public function abandonedJobMessageOfId(int $id): AbandonedJobMessage;
 
     /**
      * @return AbandonedJobMessage[]

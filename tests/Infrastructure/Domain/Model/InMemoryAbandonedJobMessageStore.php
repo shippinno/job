@@ -16,7 +16,7 @@ class InMemoryAbandonedJobMessageStore implements AbandonedJobMessageStore
     /**
      * {@inheritdoc}
      */
-    public function abandonedJobMessageOfId(int $id): ?AbandonedJobMessage
+    public function abandonedJobMessageOfId(int $id): AbandonedJobMessage
     {
         if (!isset($this->abandonedJobMessages[$id])) {
             throw new AbandonedJobMessageNotFoundException($id);

@@ -2,6 +2,7 @@
 
 namespace Shippinno\Job\Application\Messaging;
 
+use Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageStore;
 
 class DeleteAbandonedJobMessageService
@@ -21,10 +22,10 @@ class DeleteAbandonedJobMessageService
     }
 
     /**
-     * @param string $id
-     * @throws \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
+     * @param int $id
+     * @throws AbandonedJobMessageNotFoundException
      */
-    public function execute(string $id): void
+    public function execute(int $id): void
     {
         $abandonedJobMessage = $this->abandonedJobMessageStore->abandonedJobMessageOfId($id);
         $this->abandonedJobMessageStore->remove($abandonedJobMessage);
