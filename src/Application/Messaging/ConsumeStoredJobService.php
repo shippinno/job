@@ -83,7 +83,7 @@ class ConsumeStoredJobService
      * @param string $queueName
      * @param Closure|null $persist
      */
-    public function execute(string $queueName, Closure $persist = null): void
+    public function execute(string $queueName, Closure $persist = null, Closure $clear = null): void
     {
         $consumer = $this->context->createConsumer($this->context->createQueue($queueName));
         $message = $consumer->receive(5000);
@@ -126,6 +126,9 @@ class ConsumeStoredJobService
         } catch (JobFailedException $e) {
             $attempts = $message->getProperty('attempts', 0) + 1;
             if ($attempts >= $job->maxAttempts()) {
+                if (!is_null($clear)) {
+                    $clear();
+                }
                 $this->abandonedJobMessageStore->add(
                     new AbandonedJobMessage($queueName, $message->getBody(), $e->__toString())
                 );
@@ -136,7 +139,7 @@ class ConsumeStoredJobService
                 $consumer->reject($message);
                 if (!is_null($persist) && !$persist()) {
                     $this->logger->info(
-                        'Persistence failed after the job. Requeueing the message.',
+                        'failed after the job. Requeueing the message.',
                         ['message' => $message->getBody()]
                     );
                     $consumer->reject($message, true);

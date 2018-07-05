@@ -49,14 +49,21 @@ class JobConsume extends Command
         $forever = !env('JOB_TESTING', false);
         do {
             $this->clear();
-            $this->consumeStoredJobService->execute($queueName, function () {
-                try {
-                    $this->flush();
-                } catch (Throwable $e) {
-                    return false;
+            $this->consumeStoredJobService->execute(
+                $queueName,
+                function () {
+                    try {
+                        $this->flush();
+                    } catch (Throwable $e) {
+                        return false;
+                    }
+                    return true;
+                },
+                function () {
+                    $this->clear();
                 }
-                return true;
-            });
+            );
+
         } while ($forever);
     }
 
