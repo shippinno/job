@@ -134,6 +134,13 @@ class ConsumeStoredJobService
                     ['message' => $message->getBody()]
                 );
                 $consumer->reject($message);
+                if (!is_null($persist) && !$persist()) {
+                    $this->logger->info(
+                        'Persistence failed after the job. Requeueing the message.',
+                        ['message' => $message->getBody()]
+                    );
+                    $consumer->reject($message, true);
+                }
                 return;
             }
             $message->setProperty('attempts', $attempts);
