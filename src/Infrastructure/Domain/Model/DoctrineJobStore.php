@@ -52,6 +52,7 @@ class DoctrineJobStore extends EntityRepository implements JobStore
             $query->where('j.id > :id');
             $query->setParameters(['id' => $jobId]);
         }
+        $query->setMaxResults(100);
         $query->orderBy('j.id');
 
         return $query->getQuery()->getResult();
