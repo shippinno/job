@@ -210,12 +210,20 @@ class ConsumeStoredJobServiceTest extends TestCase
         $identifier = uniqid();
         $message = $this->createMessage($identifier, $job);
         $consumer = $this->createConsumer($message);
+        $consumer
+            ->shouldReceive('acknowledge')
+            ->once()
+            ->withArgs([
+                Mockery::on(function (NullMessage $message) use ($identifier) {
+                    return $message->getProperty('identifier') === $identifier;
+                })
+            ]);
         $context = $this->createContext($consumer);
         $service = $this->createService($context);
         $logger = new LoggerSpy;
         $service->setLogger($logger);
         $service->execute(self::QUEUE_NAME);
-        $this->assertSame('Expendable job failed. Letting it go.', $logger->getFirstLogCall()->getMessage());
+        $this->assertSame('Expendable job failed. Acknowledging and letting it go.', $logger->getFirstLogCall()->getMessage());
 
     }
 

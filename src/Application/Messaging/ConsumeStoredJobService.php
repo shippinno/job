@@ -126,9 +126,10 @@ class ConsumeStoredJobService
         } catch (JobFailedException $e) {
             if ($job->isExpendable()) {
                 $this->logger->debug(
-                    'Expendable job failed. Letting it go.',
+                    'Expendable job failed. Acknowledging and letting it go.',
                     ['message' => $message->getBody()]
                 );
+                $consumer->acknowledge($message);
                 return;
             }
             $attempts = $message->getProperty('attempts', 0) + 1;
