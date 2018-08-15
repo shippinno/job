@@ -28,10 +28,11 @@ class JMSJobSerializerTest extends TestCase
         $job->setReattemptDelay(600);
         $json = $this->jobSerializer->serialize($job);
         $array = json_decode($json, true);
-        $this->assertSame(3, count($array));
+        $this->assertSame(4, count($array));
         $this->assertSame($job->maxAttempts(), $array['max_attempts']);
         $this->assertSame($job->reattemptDelay(), $array['reattempt_delay']);
         $this->assertSame($job->createdAt()->format(DateTime::ISO8601), $array['created_at']);
+        $this->assertFalse($array['is_expendable']);
     }
 
     public function testDeserialize()
@@ -42,6 +43,7 @@ class JMSJobSerializerTest extends TestCase
                 'max_attempts' => 3,
                 'reattempt_delay' => 600,
                 'created_at' => $createdAt->format(DateTime::ISO8601),
+                'is_expendable' => true,
             ]),
             NullJob::class
         );
@@ -52,5 +54,6 @@ class JMSJobSerializerTest extends TestCase
             $createdAt->format(DateTime::ISO8601),
             $job->createdAt()->format(DateTime::ISO8601)
         );
+        $this->assertTrue($job->isExpendable());
     }
 }

@@ -34,13 +34,14 @@ class JMSStoredJobSerializerTest extends TestCase
     {
         $job = new NullJob;
         $body = $this->jobSerializer->serialize($job);
-        $storedJob = new StoredJob(get_class($job), $body, $job->createdAt());
+        $storedJob = new StoredJob(get_class($job), $body, $job->createdAt(), $job->isExpendable());
         $json = $this->storedJobSerializer->serialize($storedJob);
         $array = json_decode($json, true);
-        $this->assertSame(3, count($array));
+        $this->assertSame(4, count($array));
         $this->assertSame(NullJob::class, $array['name']);
         $this->assertSame($body, $array['body']);
         $this->assertSame($job->createdAt()->format(DateTime::ISO8601), $array['created_at']);
+        $this->assertSame($job->isExpendable(), $job->isExpendable());
     }
 
     public function testDeserialize()

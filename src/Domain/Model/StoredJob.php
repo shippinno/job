@@ -27,6 +27,11 @@ class StoredJob
     private $createdAt;
 
     /**
+     * @var bool
+     */
+    private $isExpendable;
+
+    /**
      * @var string|null
      */
     private $fifoGroupId;
@@ -36,11 +41,12 @@ class StoredJob
      * @param string $body
      * @param DateTimeImmutable $createdAt
      */
-    public function __construct(string $name, string $body, DateTimeImmutable $createdAt, string $fifoGroupId = null)
+    public function __construct(string $name, string $body, DateTimeImmutable $createdAt, bool $isExpendable, string $fifoGroupId = null)
     {
         $this->name = $name;
         $this->body = $body;
         $this->createdAt = $createdAt;
+        $this->isExpendable = $isExpendable;
         $this->fifoGroupId = $fifoGroupId;
     }
 
@@ -74,6 +80,14 @@ class StoredJob
     public function createdAt(): DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExpendable(): bool
+    {
+        return $this->isExpendable;
     }
 
     /**

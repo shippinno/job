@@ -124,6 +124,13 @@ class ConsumeStoredJobService
             $this->logger->info('Acknowledging message.', ['message' => $message->getBody()]);
             $consumer->acknowledge($message);
         } catch (JobFailedException $e) {
+            if ($job->isExpendable()) {
+                $this->logger->debug(
+                    'Expendable job failed. Letting it go.',
+                    ['message' => $message->getBody()]
+                );
+                return;
+            }
             $attempts = $message->getProperty('attempts', 0) + 1;
             if ($attempts >= $job->maxAttempts()) {
                 if (!is_null($clear)) {
@@ -139,7 +146,7 @@ class ConsumeStoredJobService
                 $consumer->reject($message);
                 if (!is_null($persist) && !$persist()) {
                     $this->logger->info(
-                        'failed after the job. Requeueing the message.',
+                        'Failed after the job. Requeueing the message.',
                         ['message' => $message->getBody()]
                     );
                     $consumer->reject($message, true);

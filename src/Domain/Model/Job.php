@@ -22,12 +22,21 @@ abstract class Job
     protected $createdAt;
 
     /**
+     * @var bool
+     */
+    protected $isExpendable = false;
+
+    /**
      * @var null|string
      */
     protected $fifoGroupId;
 
+    /**
+     * @return void
+     */
     public function __construct()
     {
+        /** @noinspection PhpUnhandledExceptionInspection */
         $this->createdAt = new DateTimeImmutable;
         $this->setFifoGroupId();
     }
@@ -73,6 +82,14 @@ abstract class Job
     }
 
     /**
+     * @return bool
+     */
+    public function isExpendable(): bool
+    {
+        return $this->isExpendable;
+    }
+
+    /**
      * @return null|string
      */
     public function fifoGroupId(): ?string
@@ -87,7 +104,6 @@ abstract class Job
     {
         $this->fifoGroupId = null;
     }
-
 
     /**
      * @return Job[]

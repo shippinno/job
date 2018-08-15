@@ -15,7 +15,7 @@ class FakeStoredJob extends StoredJob
      */
     public function __construct(string $name, string $body, DateTimeImmutable $createdAt, int $id = null)
     {
-        parent::__construct($name, $body, $createdAt);
+        parent::__construct($name, $body, $createdAt, false);
         $this->id = $id;
     }
 }

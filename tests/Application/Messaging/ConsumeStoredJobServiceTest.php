@@ -18,14 +18,17 @@ use Shippinno\Job\Domain\Model\JobSerializer;
 use Shippinno\Job\Domain\Model\JobStore;
 use Shippinno\Job\Domain\Model\StoredJob;
 use Shippinno\Job\Domain\Model\StoredJobSerializer;
+use Shippinno\Job\Test\Application\Job\ExpendableJobRunner;
 use Shippinno\Job\Test\Application\Job\FakeJobRunner;
 use Shippinno\Job\Test\Application\Job\SucceedingJobRunner;
 use Shippinno\Job\Test\Domain\Model\DependedNullJob;
+use Shippinno\Job\Test\Domain\Model\ExpendableJob;
 use Shippinno\Job\Test\Domain\Model\FakeJob;
 use Shippinno\Job\Test\Domain\Model\NullJob;
 use Shippinno\Job\Test\Domain\Model\SimpleJobSerializer;
 use Shippinno\Job\Test\Domain\Model\SimpleStoredJobSerializer;
 use Shippinno\Job\Test\Infrastructure\Domain\Model\InMemoryAbandonedJobMessageStore;
+use WMDE\PsrLogTestDoubles\LoggerSpy;
 
 class ConsumeStoredJobServiceTest extends TestCase
 {
@@ -201,9 +204,24 @@ class ConsumeStoredJobServiceTest extends TestCase
         $this->assertCount(1, $this->abandonedJobMessageStore->all());
     }
 
+    public function testItShouldLetExpendableJobGo()
+    {
+        $job = new ExpendableJob();
+        $identifier = uniqid();
+        $message = $this->createMessage($identifier, $job);
+        $consumer = $this->createConsumer($message);
+        $context = $this->createContext($consumer);
+        $service = $this->createService($context);
+        $logger = new LoggerSpy;
+        $service->setLogger($logger);
+        $service->execute(self::QUEUE_NAME);
+        $this->assertSame('Expendable job failed. Letting it go.', $logger->getFirstLogCall()->getMessage());
+
+    }
+
     private function createMessage(string $identifier, Job $job, int $attempts = null, string $messageClass = NullMessage::class): PsrMessage
     {
-        $storedJob = new StoredJob(get_class($job), $this->jobSerializer->serialize($job), $job->createdAt());
+        $storedJob = new StoredJob(get_class($job), $this->jobSerializer->serialize($job), $job->createdAt(), $job->isExpendable());
         $message = new $messageClass($this->storedJobSerializer->serialize($storedJob));
         $message->setProperty('identifier', $identifier);
         if (null !== $attempts) {
@@ -253,6 +271,7 @@ class ConsumeStoredJobServiceTest extends TestCase
             NullJob::class => new SucceedingJobRunner,
             DependedNullJob::class => new SucceedingJobRunner,
             FakeJob::class => new FakeJobRunner,
+            ExpendableJob::class => new ExpendableJobRunner,
         ]);
         $jobStore = Mockery::mock(JobStore::class);
         if ($dependentJobsCount > 0) {

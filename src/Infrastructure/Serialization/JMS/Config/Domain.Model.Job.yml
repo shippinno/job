@@ -9,3 +9,5 @@ Shippinno\Job\Domain\Model\Job:
             type: DateTimeImmutable
         fifoGroupId:
             type: string
+        isExpendable:
+            type: boolean
