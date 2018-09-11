@@ -2,6 +2,8 @@
 
 namespace Shippinno\Job\Application\Messaging;
 
+use Enqueue\Sqs\SqsMessage;
+use Enqueue\Sqs\SqsProducer;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrProducer;
@@ -68,21 +70,32 @@ class EnqueueStoredJobsService
         $producer = $this->createProducer();
         $topic = $this->createTopic($topicName);
         try {
+            $messages = [];
             foreach ($storedJobsToEnqueue as $storedJob) {
                 $message = $this->createMessage($storedJob);
-                if (method_exists($message, 'setMessageDeduplicationId')) {
+                if ($message instanceof SqsMessage) {
+                    $message->setMessageId($storedJob->id());
                     $message->setMessageDeduplicationId(uniqid());
-                }
-                if (method_exists($message, 'setMessageGroupId')) {
                     $message->setMessageGroupId(
                         is_null($storedJob->fifoGroupId())
                             ? uniqid()
                             : $storedJob->fifoGroupId()
                     );
                 }
-                $producer->send($topic, $message);
-                $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
-                $lastEnqueuedStoredJob = $storedJob;
+                $messages[] = $message;
+            }
+            if ($producer instanceof SqsProducer) {
+                foreach (array_chunk($messages, 10) as $i => $chunk) {
+                    $enqueuedMessagesCount = $enqueuedMessagesCount + count($chunk);
+                    $lastEnqueuedStoredJob = $storedJobsToEnqueue[($i + 1) * 10 - 1];
+                    $producer->sendAll($topic, $chunk);
+                }
+            } else {
+                foreach ($messages as $i => $message) {
+                    $producer->send($topic, $message);
+                    $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
+                    $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i];
+                }
             }
         } catch (Throwable $e) {
             throw new FailedToEnqueueStoredJobException($enqueuedMessagesCount, $e);
