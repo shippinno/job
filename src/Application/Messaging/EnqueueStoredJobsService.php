@@ -87,7 +87,7 @@ class EnqueueStoredJobsService
             if ($producer instanceof SqsProducer) {
                 foreach (array_chunk($messages, 10) as $i => $chunk) {
                     $enqueuedMessagesCount = $enqueuedMessagesCount + count($chunk);
-                    $lastEnqueuedStoredJob = $storedJobsToEnqueue[($i + 1) * 10 - 1];
+                    $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i * 10 + count($chunk) - 1];
                     $producer->sendAll($topic, $chunk);
                 }
             } else {
