@@ -20,7 +20,7 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
     /**
      * {@inheritdoc}
      */
-    public function latestJobFlightOfJobId(int $jobId): JobFlight
+    public function latestJobFlightOfJobId(int $jobId): ?JobFlight
     {
         return $this->findOneBy(['jobId' => $jobId], ['id' => 'DESC']);
     }
@@ -30,8 +30,11 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
      */
     public function acknowledged(int $jobId): void
     {
-        $this->latestJobFlightOfJobId($jobId)->acknowledge();
-        $this->getEntityManager()->flush();
+        $jobFlight = $this->latestJobFlightOfJobId($jobId);
+        if (!is_null($jobFlight)) {
+            $jobFlight->acknowledge();
+            $this->getEntityManager()->flush();
+        }
     }
 
     /**
@@ -39,8 +42,11 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
      */
     public function abandoned(int $jobId): void
     {
-        $this->latestJobFlightOfJobId($jobId)->abandoned();
-        $this->getEntityManager()->flush();
+        $jobFlight = $this->latestJobFlightOfJobId($jobId);
+        if (!is_null($jobFlight)) {
+            $jobFlight->abandoned();
+            $this->getEntityManager()->flush();
+        }
     }
 
     /**
@@ -49,9 +55,11 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
     public function requeued(int $jobId): void
     {
         $jobFlight = $this->latestJobFlightOfJobId($jobId);
-        $jobFlight->requeued();
-        $this->departed($jobFlight->jobId(), $jobFlight->queue());
-        $this->getEntityManager()->flush();
+        if (!is_null($jobFlight)) {
+            $jobFlight->requeued();
+            $this->departed($jobFlight->jobId(), $jobFlight->queue());
+            $this->getEntityManager()->flush();
+        }
     }
 
     /**
@@ -59,8 +67,11 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
      */
     public function rejected(int $jobId): void
     {
-        $this->latestJobFlightOfJobId($jobId)->rejected();
-        $this->getEntityManager()->flush();
+        $jobFlight = $this->latestJobFlightOfJobId($jobId);
+        if (!is_null($jobFlight)) {
+            $this->latestJobFlightOfJobId($jobId)->rejected();
+            $this->getEntityManager()->flush();
+        }
     }
 
     /**
@@ -68,7 +79,10 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
      */
     public function letGo(int $jobId): void
     {
-        $this->latestJobFlightOfJobId($jobId)->letGo();
-        $this->getEntityManager()->flush();
+        $jobFlight = $this->latestJobFlightOfJobId($jobId);
+        if (!is_null($jobFlight)) {
+            $jobFlight->letGo();
+            $this->getEntityManager()->flush();
+        }
     }
 }

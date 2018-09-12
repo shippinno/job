@@ -159,7 +159,7 @@ class EnqueueStoredJobsService
      */
     protected function createMessage(StoredJob $storedJob): PsrMessage
     {
-        $message = $this->context->createMessage($storedJob->body());
+        $message = $this->context->createMessage($this->storedJobSerializer->serialize($storedJob));
 
         return $message;
     }

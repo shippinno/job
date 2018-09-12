@@ -12,9 +12,9 @@ interface JobFlightManager
 
     /**
      * @param int $jobId
-     * @return JobFlight
+     * @return null|JobFlight
      */
-    public function latestJobFlightOfJobId(int $jobId): JobFlight;
+    public function latestJobFlightOfJobId(int $jobId): ?JobFlight;
 
     /**
      * @param int $jobId

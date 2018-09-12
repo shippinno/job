@@ -15,7 +15,7 @@ class NullJobFlightManager implements JobFlightManager
     /**
      * {@inheritdoc}
      */
-    public function latestJobFlightOfJobId(int $jobId): JobFlight
+    public function latestJobFlightOfJobId(int $jobId): ?JobFlight
     {
 
     }
