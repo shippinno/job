@@ -84,7 +84,7 @@ class ConsumeStoredJobService
         $this->jobStore = $jobStore;
         $this->abandonedJobMessageStore = $abandonedJobMessageStore;
         $this->jobFlightManager = $jobFlightManager ?: new NullJobFlightManager;
-        $this->setLogger(null !== $logger ?: new NullLogger);
+        $this->setLogger($logger ?: new NullLogger);
     }
 
     /**
