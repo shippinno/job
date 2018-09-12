@@ -53,12 +53,18 @@ class ConsumeStoredJobService
     private $abandonedJobMessageStore;
 
     /**
+     * @var JobFlightManager
+     */
+    private $jobFlightManager;
+
+    /**
      * @param PsrContext $context
      * @param StoredJobSerializer $storedJobSerializer
      * @param JobSerializer $jobSerializer
      * @param JobRunnerRegistry $jobRunnerRegistry
      * @param JobStore $jobStore
      * @param AbandonedJobMessageStore $abandonedJobMessageStore
+     * @param JobFlightManager|null $jobFlightManager
      * @param LoggerInterface|null $logger
      */
     public function __construct(
@@ -68,6 +74,7 @@ class ConsumeStoredJobService
         JobRunnerRegistry $jobRunnerRegistry,
         JobStore $jobStore,
         AbandonedJobMessageStore $abandonedJobMessageStore,
+        JobFlightManager $jobFlightManager = null,
         LoggerInterface $logger = null
     ) {
         $this->context = $context;
@@ -76,7 +83,8 @@ class ConsumeStoredJobService
         $this->jobRunnerRegistry = $jobRunnerRegistry;
         $this->jobStore = $jobStore;
         $this->abandonedJobMessageStore = $abandonedJobMessageStore;
-        $this->setLogger(null !== $logger ? $logger : new NullLogger);
+        $this->jobFlightManager = $jobFlightManager ?: new NullJobFlightManager;
+        $this->setLogger(null !== $logger ?: new NullLogger);
     }
 
     /**
@@ -102,6 +110,7 @@ class ConsumeStoredJobService
                 'No JobRunner is registered. Message is abandoned. Rejecting the message.',
                 ['message' => $message->getBody()]
             );
+            $this->jobFlightManager->rejected($message->getMessageId());
             $consumer->reject($message);
             return;
         }
@@ -112,6 +121,7 @@ class ConsumeStoredJobService
                     'Persistence failed after the job. Requeueing the message.',
                     ['message' => $message->getBody()]
                 );
+                $this->jobFlightManager->requeued($message->getMessageId());
                 $consumer->reject($message, true);
                 return;
             }
@@ -122,6 +132,7 @@ class ConsumeStoredJobService
                 }
             }
             $this->logger->info('Acknowledging message.', ['message' => $message->getBody()]);
+            $this->jobFlightManager->acknowledged($message->getMessageId());
             $consumer->acknowledge($message);
         } catch (JobFailedException $e) {
             if ($job->isExpendable()) {
@@ -129,6 +140,7 @@ class ConsumeStoredJobService
                     'Expendable job failed. Acknowledging and letting it go.',
                     ['message' => $message->getBody()]
                 );
+                $this->jobFlightManager->letGo($message->getMessageId());
                 $consumer->acknowledge($message);
                 return;
             }
@@ -144,12 +156,14 @@ class ConsumeStoredJobService
                     'Rejecting the message reaching the max attempts.',
                     ['message' => $message->getBody()]
                 );
+                $this->jobFlightManager->rejected($message->getMessageId());
                 $consumer->reject($message);
                 if (!is_null($persist) && !$persist()) {
                     $this->logger->info(
                         'Failed after the job. Requeueing the message.',
                         ['message' => $message->getBody()]
                     );
+                    $this->jobFlightManager->requeued($message->getMessageId());
                     $consumer->reject($message, true);
                 }
                 return;
@@ -165,6 +179,7 @@ class ConsumeStoredJobService
                 $message->setMessageGroupId(is_null($storedJob->fifoGroupId()) ? uniqid() : $storedJob->fifoGroupId());
             }
             $this->logger->info('Requeueing the message.', ['message' => $message->getBody()]);
+            $this->jobFlightManager->requeued($message->getMessageId());
             $consumer->reject($message, true);
         }
     }

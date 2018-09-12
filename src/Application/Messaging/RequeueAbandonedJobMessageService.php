@@ -21,15 +21,23 @@ class RequeueAbandonedJobMessageService
     private $abandonedJobMessageStore;
 
     /**
+     * @var JobFlightManager
+     */
+    private $jobFlightManager;
+
+    /**
      * @param PsrContext $context
      * @param AbandonedJobMessageStore $abandonedJobMessageStore
+     * @param JobFlightManager|null $jobFlightManager
      */
     public function __construct(
         PsrContext $context,
-        AbandonedJobMessageStore $abandonedJobMessageStore
+        AbandonedJobMessageStore $abandonedJobMessageStore,
+        JobFlightManager $jobFlightManager = null
     ) {
         $this->context = $context;
         $this->abandonedJobMessageStore = $abandonedJobMessageStore;
+        $this->jobFlightManager = $jobFlightManager ?: new NullJobFlightManager;
     }
 
     /**

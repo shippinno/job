@@ -231,6 +231,7 @@ class ConsumeStoredJobServiceTest extends TestCase
     {
         $storedJob = new StoredJob(get_class($job), $this->jobSerializer->serialize($job), $job->createdAt(), $job->isExpendable());
         $message = new $messageClass($this->storedJobSerializer->serialize($storedJob));
+        $message->setMessageId(uniqid());
         $message->setProperty('identifier', $identifier);
         if (null !== $attempts) {
             $message->setProperty('attempts', $attempts);

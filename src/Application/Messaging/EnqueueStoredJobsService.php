@@ -37,21 +37,29 @@ class EnqueueStoredJobsService
     protected $enqueuedStoredJobTrackerStore;
 
     /**
+     * @var JobFlightManager
+     */
+    private $jobFlightManager;
+
+    /**
      * @param PsrContext $context
      * @param JobStore $jobStore
      * @param StoredJobSerializer $storedJobSerializer
      * @param EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore
+     * @param JobFlightManager|null $jobFlightManager
      */
     public function __construct(
         PsrContext $context,
         JobStore $jobStore,
         StoredJobSerializer $storedJobSerializer,
-        EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore
+        EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore,
+        JobFlightManager $jobFlightManager = null
     ) {
         $this->context = $context;
         $this->jobStore = $jobStore;
         $this->storedJobSerializer = $storedJobSerializer;
         $this->enqueuedStoredJobTrackerStore = $enqueuedStoredJobTrackerStore;
+        $this->jobFlightManager = $jobFlightManager ?: new NullJobFlightManager;
     }
 
     /**
@@ -70,11 +78,12 @@ class EnqueueStoredJobsService
         $producer = $this->createProducer();
         $topic = $this->createTopic($topicName);
         try {
+            /** @var PsrMessage[] $messages */
             $messages = [];
             foreach ($storedJobsToEnqueue as $storedJob) {
                 $message = $this->createMessage($storedJob);
+                $message->setMessageId($storedJob->id());
                 if ($message instanceof SqsMessage) {
-                    $message->setMessageId($storedJob->id());
                     $message->setMessageDeduplicationId(uniqid());
                     $message->setMessageGroupId(
                         is_null($storedJob->fifoGroupId())
@@ -89,12 +98,16 @@ class EnqueueStoredJobsService
                     $enqueuedMessagesCount = $enqueuedMessagesCount + count($chunk);
                     $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i * 10 + count($chunk) - 1];
                     $producer->sendAll($topic, $chunk);
+                    foreach ($chunk as $message) {
+                        $this->jobFlightManager->departed($message->getMessageId(), $topicName);
+                    }
                 }
             } else {
                 foreach ($messages as $i => $message) {
                     $producer->send($topic, $message);
                     $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
                     $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i];
+                    $this->jobFlightManager->departed($message->getMessageId(), $topicName);
                 }
             }
         } catch (Throwable $e) {
@@ -146,7 +159,7 @@ class EnqueueStoredJobsService
      */
     protected function createMessage(StoredJob $storedJob): PsrMessage
     {
-        $message = $this->context->createMessage($this->storedJobSerializer->serialize($storedJob));
+        $message = $this->context->createMessage($storedJob->body());
 
         return $message;
     }
