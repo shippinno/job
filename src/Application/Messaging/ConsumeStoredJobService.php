@@ -98,6 +98,10 @@ class ConsumeStoredJobService
         if (null === $message) {
             return;
         }
+        if (null === $message->getMessageId()) {
+            $this->logger->alert('Message without ID.', ['message' => $message->getBody()]);
+            return;
+        }
         $storedJob = $this->storedJobSerializer->deserialize($message->getBody());
         $job = $this->jobSerializer->deserialize($storedJob->body(), $storedJob->name());
         try {
