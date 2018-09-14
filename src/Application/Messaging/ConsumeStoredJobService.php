@@ -121,7 +121,9 @@ class ConsumeStoredJobService
                     'Persistence failed after the job. Requeueing the message.',
                     ['message' => $message->getBody()]
                 );
-                $this->jobFlightManager->requeued($message->getMessageId());
+                $newMessageId = $message->getMessageId() . '+';
+                $this->jobFlightManager->requeued($message->getMessageId(), $newMessageId);
+                $message->setMessageId($newMessageId);
                 $consumer->reject($message, true);
                 return;
             }
@@ -163,7 +165,9 @@ class ConsumeStoredJobService
                         'Failed after the job. Requeueing the message.',
                         ['message' => $message->getBody()]
                     );
-                    $this->jobFlightManager->requeued($message->getMessageId());
+                    $newMessageId = $message->getMessageId() . '+';
+                    $this->jobFlightManager->requeued($message->getMessageId(), $newMessageId);
+                    $message->setMessageId($newMessageId);
                     $consumer->reject($message, true);
                 }
                 return;
@@ -179,7 +183,9 @@ class ConsumeStoredJobService
                 $message->setMessageGroupId(is_null($storedJob->fifoGroupId()) ? uniqid() : $storedJob->fifoGroupId());
             }
             $this->logger->info('Requeueing the message.', ['message' => $message->getBody()]);
-            $this->jobFlightManager->requeued($message->getMessageId());
+            $newMessageId = $message->getMessageId() . '+';
+            $this->jobFlightManager->requeued($message->getMessageId(), $newMessageId);
+            $message->setMessageId($newMessageId);
             $consumer->reject($message, true);
         }
     }

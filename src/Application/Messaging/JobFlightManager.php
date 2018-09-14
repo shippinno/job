@@ -27,9 +27,10 @@ interface JobFlightManager
     public function abandoned(int $jobId): void;
 
     /**
-     * @param int $jobId
+     * @param string $jobId
+     * @param string $requeuedJobId
      */
-    public function requeued(int $jobId): void;
+    public function requeued(string $jobId, string $requeuedJobId): void;
 
     /**
      * @param int $jobId

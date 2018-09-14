@@ -52,12 +52,12 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
     /**
      * {@inheritdoc}
      */
-    public function requeued(int $jobId): void
+    public function requeued(string $jobId, string $requeuedJobId): void
     {
         $jobFlight = $this->latestJobFlightOfJobId($jobId);
         if (!is_null($jobFlight)) {
             $jobFlight->requeued();
-            $this->departed($jobFlight->jobId(), $jobFlight->queue());
+            $this->departed($requeuedJobId, $jobFlight->queue());
             $this->getEntityManager()->flush();
         }
     }
