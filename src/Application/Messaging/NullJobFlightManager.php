@@ -7,7 +7,7 @@ class NullJobFlightManager implements JobFlightManager
     /**
      * {@inheritdoc}
      */
-    public function departed(int $jobId, string $queue): void
+    public function departed(int $jobId, string $jobName, string $queue): void
     {
 
     }

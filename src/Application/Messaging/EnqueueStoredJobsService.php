@@ -91,23 +91,34 @@ class EnqueueStoredJobsService
                             : $storedJob->fifoGroupId()
                     );
                 }
-                $messages[] = $message;
+                $messages[] = [
+                    'jobName' => $storedJob->name(),
+                    'message' => $message
+                ];
             }
             if ($producer instanceof SqsProducer) {
                 foreach (array_chunk($messages, 10) as $i => $chunk) {
                     $enqueuedMessagesCount = $enqueuedMessagesCount + count($chunk);
                     $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i * 10 + count($chunk) - 1];
-                    $producer->sendAll($topic, $chunk);
+                    $producer->sendAll($topic, array_column($chunk, 'message'));
                     foreach ($chunk as $message) {
-                        $this->jobFlightManager->departed($message->getMessageId(), $topicName);
+                        $this->jobFlightManager->departed(
+                            $message['message']->getMessageId(),
+                            $message['jobName'],
+                            $topicName
+                        );
                     }
                 }
             } else {
                 foreach ($messages as $i => $message) {
-                    $producer->send($topic, $message);
+                    $producer->send($topic, $message['message']);
                     $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
                     $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i];
-                    $this->jobFlightManager->departed($message->getMessageId(), $topicName);
+                    $this->jobFlightManager->departed(
+                        $message['message']->getMessageId(),
+                        $message['jobName'],
+                        $topicName
+                    );
                 }
             }
         } catch (Throwable $e) {

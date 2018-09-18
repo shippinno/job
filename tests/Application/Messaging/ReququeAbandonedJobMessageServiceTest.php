@@ -2,6 +2,7 @@
 
 namespace Shippinno\Job\Test\Application\Messaging;
 
+use DateTimeImmutable;
 use Enqueue\Null\NullContext;
 use Interop\Queue\InvalidMessageException;
 use Interop\Queue\PsrMessage;
@@ -12,6 +13,10 @@ use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Messaging\RequeueAbandonedJobMessageService;
 use Shippinno\Job\Domain\Model\AbandonedJobMessage;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageFailedToRequeueException;
+use Shippinno\Job\Domain\Model\StoredJob;
+use Shippinno\Job\Domain\Model\StoredJobSerializer;
+use Shippinno\Job\Test\Domain\Model\FakeStoredJob;
+use Shippinno\Job\Test\Domain\Model\SimpleStoredJobSerializer;
 use Shippinno\Job\Test\Infrastructure\Domain\Model\InMemoryAbandonedJobMessageStore;
 
 class ReququeAbandonedJobMessageServiceTest extends TestCase
@@ -23,7 +28,12 @@ class ReququeAbandonedJobMessageServiceTest extends TestCase
     {
         $context = new NullContext;
         $abandonedJobMessageStore = new InMemoryAbandonedJobMessageStore;
-        $service = new RequeueAbandonedJobMessageService($context, $abandonedJobMessageStore);
+        $storedJobSerializer = Mockery::mock(StoredJobSerializer::class);
+        $service = new RequeueAbandonedJobMessageService(
+            $context,
+            $abandonedJobMessageStore,
+            $storedJobSerializer
+        );
         $service->execute(1);
     }
 
@@ -32,6 +42,10 @@ class ReququeAbandonedJobMessageServiceTest extends TestCase
         $abandonedJobMessage = new AbandonedJobMessage('QUEUE_NAME', 'MESSAGE', 'reason');
         $abandonedJobMessageStore = new InMemoryAbandonedJobMessageStore;
         $abandonedJobMessageStore->add($abandonedJobMessage);
+        $storedJobSerializer = Mockery::mock(StoredJobSerializer::class);
+        $storedJobSerializer->shouldReceive([
+            'deserialize' => new FakeStoredJob('name', 'body', new DateTimeImmutable(), 1),
+        ]);
         $producer = Mockery::mock(PsrProducer::class);
         $producer
             ->shouldReceive('send')
@@ -39,7 +53,7 @@ class ReququeAbandonedJobMessageServiceTest extends TestCase
             ->andThrow(new InvalidMessageException);
         $context = Mockery::mock(NullContext::class)->makePartial();
         $context->shouldReceive('createProducer')->once()->andReturn($producer);
-        $service = new RequeueAbandonedJobMessageService($context, $abandonedJobMessageStore);
+        $service = new RequeueAbandonedJobMessageService($context, $abandonedJobMessageStore, $storedJobSerializer);
         try {
             $service->execute(1);
         } catch (AbandonedJobMessageFailedToRequeueException $e) {
@@ -53,6 +67,10 @@ class ReququeAbandonedJobMessageServiceTest extends TestCase
         $abandonedJobMessage = new AbandonedJobMessage('QUEUE_NAME', 'MESSAGE', 'reason');
         $abandonedJobMessageStore = new InMemoryAbandonedJobMessageStore;
         $abandonedJobMessageStore->add($abandonedJobMessage);
+        $storedJobSerializer = Mockery::mock(StoredJobSerializer::class);
+        $storedJobSerializer->shouldReceive([
+            'deserialize' => new FakeStoredJob('name', 'body', new DateTimeImmutable(), 1),
+        ]);
         $producer = Mockery::mock(PsrProducer::class);
         $producer
             ->shouldReceive('send')
@@ -67,7 +85,7 @@ class ReququeAbandonedJobMessageServiceTest extends TestCase
             ->once();
         $context = Mockery::mock(NullContext::class)->makePartial();
         $context->shouldReceive('createProducer')->once()->andReturn($producer);
-        $service = new RequeueAbandonedJobMessageService($context, $abandonedJobMessageStore);
+        $service = new RequeueAbandonedJobMessageService($context, $abandonedJobMessageStore, $storedJobSerializer);
         $service->execute(1);
         $this->assertCount(0, $abandonedJobMessageStore->all());
     }

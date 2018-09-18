@@ -7,6 +7,7 @@ use Interop\Queue\PsrContext;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageFailedToRequeueException;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageStore;
+use Shippinno\Job\Domain\Model\StoredJobSerializer;
 
 class RequeueAbandonedJobMessageService
 {
@@ -21,6 +22,11 @@ class RequeueAbandonedJobMessageService
     private $abandonedJobMessageStore;
 
     /**
+     * @var StoredJobSerializer
+     */
+    private $storedJobSerializer;
+
+    /**
      * @var JobFlightManager
      */
     private $jobFlightManager;
@@ -28,15 +34,18 @@ class RequeueAbandonedJobMessageService
     /**
      * @param PsrContext $context
      * @param AbandonedJobMessageStore $abandonedJobMessageStore
+     * @param StoredJobSerializer $storedJobSerializer
      * @param JobFlightManager|null $jobFlightManager
      */
     public function __construct(
         PsrContext $context,
         AbandonedJobMessageStore $abandonedJobMessageStore,
+        StoredJobSerializer $storedJobSerializer,
         JobFlightManager $jobFlightManager = null
     ) {
         $this->context = $context;
         $this->abandonedJobMessageStore = $abandonedJobMessageStore;
+        $this->storedJobSerializer = $storedJobSerializer;
         $this->jobFlightManager = $jobFlightManager ?: new NullJobFlightManager;
     }
 
@@ -58,7 +67,7 @@ class RequeueAbandonedJobMessageService
         }
         try {
             $storedJob = $this->storedJobSerializer->deserialize($message->getBody());
-            $message->setMessageId($storedJob);
+            $message->setMessageId($storedJob->id());
             $this->context->createProducer()->send($queue, $message);
             $this->abandonedJobMessageStore->remove($abandonedJobMessage);
         } catch (QueueException $e) {

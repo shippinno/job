@@ -11,9 +11,9 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
     /**
      * {@inheritdoc}
      */
-    public function departed(int $jobId, string $queue): void
+    public function departed(int $jobId, string $jobName, string $queue): void
     {
-        $this->getEntityManager()->persist(new JobFlight($jobId, $queue));
+        $this->getEntityManager()->persist(new JobFlight($jobId, $jobName, $queue));
         $this->getEntityManager()->flush();
     }
 

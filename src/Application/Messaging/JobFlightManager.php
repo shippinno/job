@@ -6,9 +6,10 @@ interface JobFlightManager
 {
     /**
      * @param int $jobId
+     * @param string $jobName
      * @param string $queue
      */
-    public function departed(int $jobId, string $queue): void;
+    public function departed(int $jobId, string $jobName, string $queue): void;
 
     /**
      * @param int $jobId
