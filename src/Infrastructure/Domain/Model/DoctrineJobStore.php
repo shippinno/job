@@ -58,4 +58,15 @@ class DoctrineJobStore extends EntityRepository implements JobStore
 
         return $query->getQuery()->getResult();
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function storedJobOfId(int $jobId): ?StoredJob
+    {
+        /** @var StoredJob|null $storedJob */
+        $storedJob = $this->find($jobId);
+
+        return $storedJob;
+    }
 }
