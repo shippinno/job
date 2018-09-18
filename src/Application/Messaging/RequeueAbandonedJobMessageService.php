@@ -57,6 +57,8 @@ class RequeueAbandonedJobMessageService
             $message->setMessageGroupId(uniqid());
         }
         try {
+            $storedJob = $this->storedJobSerializer->deserialize($message->getBody());
+            $message->setMessageId($storedJob);
             $this->context->createProducer()->send($queue, $message);
             $this->abandonedJobMessageStore->remove($abandonedJobMessage);
         } catch (QueueException $e) {
