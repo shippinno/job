@@ -44,6 +44,11 @@ class JobFlight
     /**
      * @var string
      */
+    private $jobName;
+
+    /**
+     * @var string
+     */
     private $queue;
 
     /**
@@ -63,11 +68,14 @@ class JobFlight
 
     /**
      * @param int $jobId
+     * @param string $jobName
      * @param string $queue
+     * @throws \Exception
      */
-    public function __construct(int $jobId, string $queue)
+    public function __construct(int $jobId, string $jobName, string $queue)
     {
         $this->jobId = $jobId;
+        $this->jobName = $jobName;
         $this->queue = $queue;
         $this->departure = new DateTimeImmutable;
         $this->arrival = null;
@@ -80,6 +88,14 @@ class JobFlight
     public function jobId(): int
     {
         return $this->jobId;
+    }
+
+    /**
+     * @return string
+     */
+    public function jobName(): string
+    {
+        return $this->jobName;
     }
 
     /**
