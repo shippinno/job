@@ -24,6 +24,9 @@ use Shippinno\Job\Test\Domain\Model\SimpleStoredJobSerializer;
 
 class EnqueueStoredJobsServiceTest extends TestCase
 {
+    /** @var int */
+    private $called = 0;
+
     public function testItReturnsZeroIfNoStoredJobsToEnqueue()
     {
         $context = new NullContext;
@@ -213,6 +216,7 @@ class EnqueueStoredJobsServiceTest extends TestCase
     /** @test */
     public function ストアされた1万ものJobをエンキューする()
     {
+        // TODO: 1万回アサートにより9秒かかるテストになってしまっています
         $storedJobs = $this->create10ThousandsOfFakeStoredJobs();
         $context = new NullContext();
         $jobStore = Mockery::mock(JobStore::class);
@@ -240,11 +244,12 @@ class EnqueueStoredJobsServiceTest extends TestCase
         $jobFlightManager = Mockery::mock(JobFlightManager::class);
         $jobFlightManager
             ->shouldReceive('departed')
-            ->withArgs(function (string $messageId, string $jobName, $topicName = null) {
-                return $messageId === $jobName;
+            ->withArgs(function (string $messageId, string $jobName, $topicName){
+                $this->called++;
+                return $messageId === "$this->called";
             });
 
-        $service = new EnqueueStoredJobsService($context, $jobStore, $storedJobSerializer, $enqueuedStoredJobTrackerStore);
+        $service = new EnqueueStoredJobsService($context, $jobStore, $storedJobSerializer, $enqueuedStoredJobTrackerStore, $jobFlightManager);
         $this->assertSame(10000, $service->execute('TOPIC'));
     }
 
@@ -252,10 +257,7 @@ class EnqueueStoredJobsServiceTest extends TestCase
     {
         $this->markTestIncomplete('WIP');
 
-        $storedJobs = [
-            new FakeStoredJob('name', 'body', new DateTimeImmutable, 1),
-            new FakeStoredJob('name', 'body', new DateTimeImmutable, 2)
-        ];
+        $storedJobs = $this->create10ThousandsOfFakeStoredJobs();
         $producer = Mockery::mock(SqsProducer::class);
         $producer
             ->shouldReceive('sendAll')
@@ -282,11 +284,11 @@ class EnqueueStoredJobsServiceTest extends TestCase
                     return 'TOPIC' === $topic;
                 }),
                 Mockery::on(function (FakeStoredJob $storedJob) {
-                    return 2 === $storedJob->id();
+                    return 10000 === $storedJob->id();
                 })
             ]);
         $service = new EnqueueStoredJobsService($context, $jobStore, $storedJobSerializer, $enqueuedStoredJobTrackerStore);
-        $this->assertSame(2, $service->execute('TOPIC'));
+        $this->assertSame(10000, $service->execute('TOPIC'));
     }
     private function create10ThousandsOfFakeStoredJobs()
     {
