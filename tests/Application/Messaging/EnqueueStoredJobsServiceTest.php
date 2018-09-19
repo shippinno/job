@@ -208,4 +208,42 @@ class EnqueueStoredJobsServiceTest extends TestCase
         }
 
     }
+
+    /** @test */
+    public function ストアされた1万ものJobをエンキューする()
+    {
+        $storedJobs = $this->create10ThousandsOfFakeStoredJobs();
+        $context = new NullContext();
+        $jobStore = Mockery::mock(JobStore::class);
+        $jobStore
+            ->shouldReceive('storedJobsSince')
+            ->withArgs([null])
+            ->once()
+            ->andReturn($storedJobs);
+        $storedJobSerializer = new SimpleStoredJobSerializer;
+        $enqueuedStoredJobTrackerStore = Mockery::mock(EnqueuedStoredJobTrackerStore::class);
+        $enqueuedStoredJobTrackerStore
+            ->shouldReceive(['lastEnqueuedStoredJobId' => null])
+            ->shouldReceive('trackLastEnqueuedStoredJob')
+            ->once()
+            ->withArgs([
+                Mockery::on(function (string $topic) {
+                    return 'TOPIC' === $topic;
+                }),
+                Mockery::on(function (FakeStoredJob $storedJob) {
+                    return 10000 === $storedJob->id();
+                })
+            ]);
+        $service = new EnqueueStoredJobsService($context, $jobStore, $storedJobSerializer, $enqueuedStoredJobTrackerStore);
+        $this->assertSame(10000, $service->execute('TOPIC'));
+    }
+
+    private function create10ThousandsOfFakeStoredJobs()
+    {
+        $storedJobs = [];
+        for($i = 1; $i < 10001; $i++) {
+            $storedJobs[] = new FakeStoredJob('name', 'body', new DateTimeImmutable, $i);
+        }
+        return $storedJobs;
+    }
 }
