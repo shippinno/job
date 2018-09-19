@@ -67,7 +67,7 @@ class EnqueueStoredJobsService
         $this->storedJobSerializer = $storedJobSerializer;
         $this->enqueuedStoredJobTrackerStore = $enqueuedStoredJobTrackerStore;
         $this->jobFlightManager = $jobFlightManager ?: new NullJobFlightManager;
-        $this->logger = $logger;
+        $this->setLogger($logger ?: new NullLogger);
     }
 
     /**
