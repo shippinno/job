@@ -8,6 +8,9 @@ use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrProducer;
 use Interop\Queue\PsrTopic;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Shippinno\Job\Domain\Model\StoredJob;
 use Shippinno\Job\Domain\Model\JobStore;
 use Shippinno\Job\Domain\Model\FailedToEnqueueStoredJobException;
@@ -16,6 +19,8 @@ use Throwable;
 
 class EnqueueStoredJobsService
 {
+    use LoggerAwareTrait;
+
     /**
      * @var PsrContext
      */
@@ -47,19 +52,22 @@ class EnqueueStoredJobsService
      * @param StoredJobSerializer $storedJobSerializer
      * @param EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore
      * @param JobFlightManager|null $jobFlightManager
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         PsrContext $context,
         JobStore $jobStore,
         StoredJobSerializer $storedJobSerializer,
         EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore,
-        JobFlightManager $jobFlightManager = null
+        JobFlightManager $jobFlightManager = null,
+        LoggerInterface $logger = null
     ) {
         $this->context = $context;
         $this->jobStore = $jobStore;
         $this->storedJobSerializer = $storedJobSerializer;
         $this->enqueuedStoredJobTrackerStore = $enqueuedStoredJobTrackerStore;
         $this->jobFlightManager = $jobFlightManager ?: new NullJobFlightManager;
+        $this->logger = $logger;
     }
 
     /**
@@ -126,6 +134,8 @@ class EnqueueStoredJobsService
         } finally {
             if (null !== $lastEnqueuedStoredJob) {
                 $this->enqueuedStoredJobTrackerStore->trackLastEnqueuedStoredJob($topicName, $lastEnqueuedStoredJob);
+                $this->logger->debug('last enqueued stored job update:',
+                    ['jobId'=> $lastEnqueuedStoredJob->id()]);
             }
         }
 
@@ -138,6 +148,8 @@ class EnqueueStoredJobsService
      */
     private function getStoredJobsToEnqueue(string $topicName): array
     {
+        $this->logger->debug('last enqueued stored job:',
+            ['jobId'=> $this->enqueuedStoredJobTrackerStore->lastEnqueuedStoredJobId($topicName)]);
         return $this->jobStore->storedJobsSince(
             $this->enqueuedStoredJobTrackerStore->lastEnqueuedStoredJobId($topicName)
         );
