@@ -79,10 +79,11 @@ class EnqueueStoredJobsService
     {
         $enqueuedMessagesCount = 0;
         $lastEnqueuedStoredJob = null;
-        $storedJobsToEnqueue = $this->getStoredJobsToEnqueue($topicName);
-        if (0 === count($storedJobsToEnqueue)) {
+        $jobFlightIds = $this->jobFlightManager->preBoardingJobFlights($topicName);
+        if (0 === count($jobFlightIds)) {
             return $enqueuedMessagesCount;
         }
+        $storedJobsToEnqueue = $this->jobStore->storedJobsOfIds($jobFlightIds);
         $producer = $this->createProducer();
         $topic = $this->createTopic($topicName);
         try {

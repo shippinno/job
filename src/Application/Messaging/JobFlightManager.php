@@ -60,7 +60,8 @@ interface JobFlightManager
     public function latestJobFlightOfJobId(int $jobId): ?JobFlight;
 
     /**
+     * @param string $queue
      * @return JobFlight[]
      */
-    public function preBoardingJobFlights(): array;
+    public function preBoardingJobFlights(string $queue): array;
 }

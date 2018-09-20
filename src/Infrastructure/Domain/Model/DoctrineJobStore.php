@@ -75,4 +75,18 @@ class DoctrineJobStore extends EntityRepository implements JobStore
 
         return $storedJob;
     }
+
+    /**
+     * @param int[] $jobIds
+     * @return StoredJob[]
+     */
+    public function storedJobsOfIds(array $jobIds): array
+    {
+        $query = $this->createQueryBuilder('j');
+        $query->where('j.id in :ids');
+        $query->setParameter('ids', $jobIds);
+        $query->orderBy('j.id');
+
+        return $query->getQuery()->getResult();
+    }
 }

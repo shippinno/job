@@ -21,4 +21,10 @@ interface JobStore
      * @return null|StoredJob
      */
     public function storedJobOfId(int $jobId): ?StoredJob;
+
+    /**
+     * @param int[] $jobIds
+     * @return StoredJob[]
+     */
+    public function storedJobsOfIds(array $jobIds): array;
 }
