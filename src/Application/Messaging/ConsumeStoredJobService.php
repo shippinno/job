@@ -126,10 +126,10 @@ class ConsumeStoredJobService
                     'Persistence failed after the job. Requeueing the message.',
                     ['message' => $message->getBody()]
                 );
-                $newMessageId = $message->getMessageId() . '+';
-                $this->jobFlightManager->requeued($message->getMessageId(), $newMessageId);
-                $message->setMessageId($newMessageId);
+                $messageId = $message->getMessageId();
+                $this->jobFlightManager->requeued($messageId);
                 $consumer->reject($message, true);
+                $this->jobFlightManager->departed($messageId);
                 return;
             }
             $dependentJobs = $job->dependentJobs();
@@ -170,10 +170,10 @@ class ConsumeStoredJobService
                         'Failed after the job. Requeueing the message.',
                         ['message' => $message->getBody()]
                     );
-                    $newMessageId = $message->getMessageId() . '+';
-                    $this->jobFlightManager->requeued($message->getMessageId(), $newMessageId);
-                    $message->setMessageId($newMessageId);
+                    $messageId = $message->getMessageId();
+                    $this->jobFlightManager->requeued($messageId);
                     $consumer->reject($message, true);
+                    $this->jobFlightManager->departed($messageId);
                 }
                 return;
             }
@@ -188,10 +188,10 @@ class ConsumeStoredJobService
                 $message->setMessageGroupId(is_null($storedJob->fifoGroupId()) ? uniqid() : $storedJob->fifoGroupId());
             }
             $this->logger->info('Requeueing the message.', ['message' => $message->getBody()]);
-            $newMessageId = $message->getMessageId() . '+';
-            $this->jobFlightManager->requeued($message->getMessageId(), $newMessageId);
-            $message->setMessageId($newMessageId);
+            $messageId = $message->getMessageId();
+            $this->jobFlightManager->requeued($messageId);
             $consumer->reject($message, true);
+            $this->jobFlightManager->departed($messageId);
         }
     }
 

@@ -63,7 +63,7 @@ class NullJobFlightManager implements JobFlightManager
     /**
      * {@inheritdoc}
      */
-    public function requeued(string $jobId, string $requeuedJobId): void
+    public function requeued(string $jobId): void
     {
 
     }

@@ -39,9 +39,8 @@ interface JobFlightManager
 
     /**
      * @param string $jobId
-     * @param string $requeuedJobId
      */
-    public function requeued(string $jobId, string $requeuedJobId): void;
+    public function requeued(string $jobId): void;
 
     /**
      * @param int $jobId
