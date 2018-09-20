@@ -67,8 +67,10 @@ class RequeueAbandonedJobMessageService
         }
         try {
             $storedJob = $this->storedJobSerializer->deserialize($message->getBody());
+            $this->jobFlightManager->boarding($storedJob->id());
             $message->setMessageId($storedJob->id());
             $this->context->createProducer()->send($queue, $message);
+            $this->jobFlightManager->departed($storedJob->id());
             $this->abandonedJobMessageStore->remove($abandonedJobMessage);
         } catch (QueueException $e) {
             throw new AbandonedJobMessageFailedToRequeueException($abandonedJobMessage->id(), $e);

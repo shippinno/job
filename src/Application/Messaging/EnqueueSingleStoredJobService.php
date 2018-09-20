@@ -71,11 +71,7 @@ class EnqueueSingleStoredJobService
         $message->setMessageId($storedJob->id());
         try {
             $producer->send($topic, $message);
-            $this->jobFlightManager->departed(
-                $message->getMessageId(),
-                $storedJob->name(),
-                $topicName
-            );
+            $this->jobFlightManager->departed($message->getMessageId());
         } catch (Throwable $e) {
             throw new FailedToEnqueueStoredJobException(0, $e);
         }

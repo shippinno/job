@@ -86,9 +86,9 @@ class EnqueueStoredJobsService
         $producer = $this->createProducer();
         $topic = $this->createTopic($topicName);
         try {
-            /** @var PsrMessage[] $messages */
             $messages = [];
             foreach ($storedJobsToEnqueue as $storedJob) {
+                $this->jobFlightManager->boarding($storedJob->id());
                 $message = $this->createMessage($storedJob);
                 $message->setMessageId($storedJob->id());
                 if ($message instanceof SqsMessage) {
@@ -106,15 +106,12 @@ class EnqueueStoredJobsService
             }
             if ($producer instanceof SqsProducer) {
                 foreach (array_chunk($messages, 10) as $i => $chunk) {
+                    /** @var PsrMessage[] $chunk */
                     $enqueuedMessagesCount = $enqueuedMessagesCount + count($chunk);
                     $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i * 10 + count($chunk) - 1];
                     $producer->sendAll($topic, array_column($chunk, 'message'));
                     foreach ($chunk as $message) {
-                        $this->jobFlightManager->departed(
-                            $message['message']->getMessageId(),
-                            $message['jobName'],
-                            $topicName
-                        );
+                        $this->jobFlightManager->departed($message['message']->getMessageId());
                     }
                 }
             } else {
@@ -122,11 +119,7 @@ class EnqueueStoredJobsService
                     $producer->send($topic, $message['message']);
                     $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
                     $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i];
-                    $this->jobFlightManager->departed(
-                        $message['message']->getMessageId(),
-                        $message['jobName'],
-                        $topicName
-                    );
+                    $this->jobFlightManager->departed($message['message']->getMessageId());
                 }
             }
         } catch (Throwable $e) {

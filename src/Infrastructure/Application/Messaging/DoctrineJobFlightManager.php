@@ -9,11 +9,87 @@ use Shippinno\Job\Application\Messaging\JobFlightManager;
 class DoctrineJobFlightManager extends EntityRepository implements JobFlightManager
 {
     /**
-     * {@inheritdoc}
+     * @param int $jobId
+     * @param string $jobName
+     * @param string $queue
      */
-    public function departed(int $jobId, string $jobName, string $queue): void
+    public function created(int $jobId, string $jobName, string $queue): void
     {
         $this->getEntityManager()->persist(new JobFlight($jobId, $jobName, $queue));
+        $this->getEntityManager()->flush();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function boarding(int $jobId): void
+    {
+        $this->latestJobFlightOfJobId($jobId)->board();
+        $this->getEntityManager()->flush();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function departed(int $jobId): void
+    {
+        $this->latestJobFlightOfJobId($jobId)->depart();
+        $this->getEntityManager()->flush();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function arrived(int $jobId): void
+    {
+        $this->latestJobFlightOfJobId($jobId)->arrive();
+        $this->getEntityManager()->flush();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function acknowledged(int $jobId): void
+    {
+        $this->latestJobFlightOfJobId($jobId)->acknowledge();
+        $this->getEntityManager()->flush();
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function abandoned(int $jobId): void
+    {
+        $this->latestJobFlightOfJobId($jobId)->abandoned();
+        $this->getEntityManager()->flush();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function requeued(string $jobId, string $requeuedJobId): void
+    {
+        $this->latestJobFlightOfJobId($jobId)->requeued();
+        $this->getEntityManager()->flush();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function rejected(int $jobId): void
+    {
+        $this->latestJobFlightOfJobId($jobId)->rejected();
+        $this->getEntityManager()->flush();
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function letGo(int $jobId): void
+    {
+        $this->latestJobFlightOfJobId($jobId)->letGo();
         $this->getEntityManager()->flush();
     }
 
@@ -23,66 +99,5 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
     public function latestJobFlightOfJobId(int $jobId): ?JobFlight
     {
         return $this->findOneBy(['jobId' => $jobId], ['id' => 'DESC']);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function acknowledged(int $jobId): void
-    {
-        $jobFlight = $this->latestJobFlightOfJobId($jobId);
-        if (!is_null($jobFlight)) {
-            $jobFlight->acknowledge();
-            $this->getEntityManager()->flush();
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function abandoned(int $jobId): void
-    {
-        $jobFlight = $this->latestJobFlightOfJobId($jobId);
-        if (!is_null($jobFlight)) {
-            $jobFlight->abandoned();
-            $this->getEntityManager()->flush();
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function requeued(string $jobId, string $requeuedJobId): void
-    {
-        $jobFlight = $this->latestJobFlightOfJobId($jobId);
-        if (!is_null($jobFlight)) {
-            $jobFlight->requeued();
-            $this->departed($requeuedJobId, $jobFlight->queue());
-            $this->getEntityManager()->flush();
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function rejected(int $jobId): void
-    {
-        $jobFlight = $this->latestJobFlightOfJobId($jobId);
-        if (!is_null($jobFlight)) {
-            $this->latestJobFlightOfJobId($jobId)->rejected();
-            $this->getEntityManager()->flush();
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function letGo(int $jobId): void
-    {
-        $jobFlight = $this->latestJobFlightOfJobId($jobId);
-        if (!is_null($jobFlight)) {
-            $jobFlight->letGo();
-            $this->getEntityManager()->flush();
-        }
     }
 }

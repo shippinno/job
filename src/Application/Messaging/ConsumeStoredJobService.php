@@ -103,6 +103,7 @@ class ConsumeStoredJobService
             $this->logger->alert('Message without ID. Filling it.', ['message' => $message->getBody()]);
             $message->setMessageId($storedJob->id());
         }
+        $this->jobFlightManager->arrived($message->getMessageId());
         $job = $this->jobSerializer->deserialize($storedJob->body(), $storedJob->name());
         try {
             $jobRunner = $this->jobRunnerRegistry->get(get_class($job));

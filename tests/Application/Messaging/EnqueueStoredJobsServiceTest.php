@@ -24,9 +24,6 @@ use Shippinno\Job\Test\Domain\Model\SimpleStoredJobSerializer;
 
 class EnqueueStoredJobsServiceTest extends TestCase
 {
-    /** @var int */
-    private $called = 0;
-
     public function testItReturnsZeroIfNoStoredJobsToEnqueue()
     {
         $context = new NullContext;
@@ -241,12 +238,19 @@ class EnqueueStoredJobsServiceTest extends TestCase
             ]);
 
         //1万件のJobそれぞれに対してDBにStoreされるようになっているか
+        $calledBoarding = 0;
+        $calledDeparted = 0;
         $jobFlightManager = Mockery::mock(JobFlightManager::class);
         $jobFlightManager
+            ->shouldReceive('boarding')
+            ->withArgs(function (string $messageId) use (&$calledBoarding) {
+                $calledBoarding++;
+                return $messageId === "$calledBoarding";
+            })
             ->shouldReceive('departed')
-            ->withArgs(function (string $messageId, string $jobName, $topicName){
-                $this->called++;
-                return $messageId === "$this->called";
+            ->withArgs(function (string $messageId) use (&$calledDeparted) {
+                $calledDeparted++;
+                return $messageId === "$calledDeparted";
             });
 
         $service = new EnqueueStoredJobsService($context, $jobStore, $storedJobSerializer, $enqueuedStoredJobTrackerStore, $jobFlightManager);
