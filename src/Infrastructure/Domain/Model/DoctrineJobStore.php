@@ -5,6 +5,7 @@ namespace Shippinno\Job\Infrastructure\Domain\Model;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Shippinno\Job\Application\Messaging\JobFlightManager;
 use Shippinno\Job\Domain\Model\Job;
 use Shippinno\Job\Domain\Model\JobSerializer;
 use Shippinno\Job\Domain\Model\JobStore;
@@ -18,14 +19,24 @@ class DoctrineJobStore extends EntityRepository implements JobStore
     private $jobSerializer;
 
     /**
+     * @var JobFlightManager
+     */
+    private $jobFlightManager;
+
+    /**
      * @param EntityManager $em
      * @param ClassMetadata $class
      * @param JobSerializer $jobSerializer
      */
-    public function __construct(EntityManager $em, ClassMetadata $class, JobSerializer $jobSerializer)
-    {
+    public function __construct(
+        EntityManager $em,
+        ClassMetadata $class,
+        JobSerializer $jobSerializer,
+        JobFlightManager $jobFlightManager
+    ) {
         parent::__construct($em, $class);
         $this->jobSerializer = $jobSerializer;
+        $this->jobFlightManager = $jobFlightManager;
     }
 
     /**
@@ -41,6 +52,8 @@ class DoctrineJobStore extends EntityRepository implements JobStore
             $job->fifoGroupId()
         );
         $this->getEntityManager()->persist($storedJob);
+
+        $this->jobFlightManager->created($storedJob->id(), $storedJob->name(), env('JOB_ENQUEUE_TOPIC'));
 
         return $storedJob;
     }
