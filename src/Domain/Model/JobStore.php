@@ -6,8 +6,9 @@ interface JobStore
 {
     /**
      * @param Job $job
+     * @return StoredJob
      */
-    public function append(Job $job): void;
+    public function append(Job $job): StoredJob;
 
     /**
      * @param int|null $jobId

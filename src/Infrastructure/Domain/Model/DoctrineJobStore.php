@@ -31,7 +31,7 @@ class DoctrineJobStore extends EntityRepository implements JobStore
     /**
      * {@inheritdoc}
      */
-    public function append(Job $job): void
+    public function append(Job $job): StoredJob
     {
         $storedJob = new StoredJob(
             get_class($job),
@@ -41,6 +41,8 @@ class DoctrineJobStore extends EntityRepository implements JobStore
             $job->fifoGroupId()
         );
         $this->getEntityManager()->persist($storedJob);
+
+        return $storedJob;
     }
 
     /**
