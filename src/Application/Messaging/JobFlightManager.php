@@ -61,7 +61,7 @@ interface JobFlightManager
 
     /**
      * @param string $queue
-     * @return JobFlight[]
+     * @return int[]
      */
     public function preBoardingJobFlights(string $queue): array;
 }

@@ -106,14 +106,14 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
      */
     public function preBoardingJobFlights(string $queue): array
     {
-        return $this->createQueryBuilder('j')
-            ->select('j')
+        return array_column($this->createQueryBuilder('j')
+            ->select('j.jobId')
             ->where('j.departure is null')
             ->andWhere('j.queue = :queue')
             ->setParameter('queue', $queue)
             ->orderBy('j.jobId')
             ->setMaxResults(100)
             ->getQuery()
-            ->getResult();
+            ->getArrayResult(), 'jobId');
     }
 }

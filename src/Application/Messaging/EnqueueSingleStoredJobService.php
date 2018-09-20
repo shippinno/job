@@ -69,6 +69,12 @@ class EnqueueSingleStoredJobService
         $topic = $this->createTopic($topicName);
         $message = $this->createMessage($storedJob);
         $message->setMessageId($storedJob->id());
+        $message->setMessageDeduplicationId(uniqid());
+        $message->setMessageGroupId(
+            is_null($storedJob->fifoGroupId())
+                ? uniqid()
+                : $storedJob->fifoGroupId()
+        );
         try {
             $producer->send($topic, $message);
             $this->jobFlightManager->departed($message->getMessageId());
