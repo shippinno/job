@@ -100,4 +100,17 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
     {
         return $this->findOneBy(['jobId' => $jobId], ['id' => 'DESC']);
     }
+
+    /**
+     * @return JobFlight[]
+     */
+    public function preBoardingJobFlights(): array
+    {
+        return $this->createQueryBuilder('j')
+            ->select('j')
+            ->where('j.departure is null')
+            ->orderBy('j.job_id')
+            ->getQuery()
+            ->getResult();
+    }
 }

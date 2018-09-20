@@ -19,11 +19,6 @@ class DoctrineJobStore extends EntityRepository implements JobStore
     private $jobSerializer;
 
     /**
-     * @var JobFlightManager
-     */
-    private $jobFlightManager;
-
-    /**
      * @param EntityManager $em
      * @param ClassMetadata $class
      * @param JobSerializer $jobSerializer
@@ -31,12 +26,10 @@ class DoctrineJobStore extends EntityRepository implements JobStore
     public function __construct(
         EntityManager $em,
         ClassMetadata $class,
-        JobSerializer $jobSerializer,
-        JobFlightManager $jobFlightManager
+        JobSerializer $jobSerializer
     ) {
         parent::__construct($em, $class);
         $this->jobSerializer = $jobSerializer;
-        $this->jobFlightManager = $jobFlightManager;
     }
 
     /**
@@ -52,8 +45,6 @@ class DoctrineJobStore extends EntityRepository implements JobStore
             $job->fifoGroupId()
         );
         $this->getEntityManager()->persist($storedJob);
-
-        $this->jobFlightManager->created($storedJob->id(), $storedJob->name(), env('JOB_ENQUEUE_TOPIC'));
 
         return $storedJob;
     }

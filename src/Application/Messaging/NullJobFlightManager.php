@@ -83,4 +83,13 @@ class NullJobFlightManager implements JobFlightManager
     {
 
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function preBoardingJobFlights(): array
+    {
+
+    }
 }
+

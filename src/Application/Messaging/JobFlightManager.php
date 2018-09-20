@@ -58,4 +58,9 @@ interface JobFlightManager
      * @return null|JobFlight
      */
     public function latestJobFlightOfJobId(int $jobId): ?JobFlight;
+
+    /**
+     * @return JobFlight[]
+     */
+    public function preBoardingJobFlights(): array;
 }
