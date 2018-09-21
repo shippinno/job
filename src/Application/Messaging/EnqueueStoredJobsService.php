@@ -70,7 +70,7 @@ class EnqueueStoredJobsService
     public function execute(string $topicName): int
     {
         $enqueuedMessagesCount = 0;
-        $preBoardingJobIds = $this->jobFlightManager->preBoardingJobFlights($topicName);
+        $preBoardingJobIds = $this->jobFlightManager->undepartedJobFlights($topicName);
         if (0 === count($preBoardingJobIds)) {
             return $enqueuedMessagesCount;
         }

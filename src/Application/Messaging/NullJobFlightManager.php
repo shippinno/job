@@ -87,7 +87,7 @@ class NullJobFlightManager implements JobFlightManager
     /**
      * {@inheritdoc}
      */
-    public function preBoardingJobFlights(string $queue): array
+    public function undepartedJobFlights(string $queue): array
     {
 
     }
