@@ -28,6 +28,11 @@ class JobConsume extends Command
     private $consumeStoredJobService;
 
     /**
+     * @var bool
+     */
+    private $terminating = false;
+
+    /**
      * @param ConsumeStoredJobService $consumeStoredJobService
      * @param ManagerRegistry|null $managerRegistry
      * @param LoggerInterface|null $logger
@@ -45,6 +50,12 @@ class JobConsume extends Command
 
     public function handle()
     {
+        if (extension_loaded('pcntl')) {
+            pcntl_async_signals(true);
+            pcntl_signal(SIGTERM, [$this, 'terminate']);
+            pcntl_signal(SIGINT, [$this, 'terminate']);
+        }
+
         $queueName = $this->queueName();
         $forever = !env('JOB_TESTING', false);
         do {
@@ -64,7 +75,7 @@ class JobConsume extends Command
                 }
             );
 
-        } while ($forever);
+        } while ($forever && !$this->terminating);
     }
 
     /**
@@ -78,5 +89,11 @@ class JobConsume extends Command
         }
 
         return $queueName;
+    }
+
+    public function terminate()
+    {
+        $this->logger->info('Terminating job:consume.');
+        $this->terminating = true;
     }
 }

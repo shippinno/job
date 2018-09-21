@@ -51,7 +51,9 @@ class JobEnqueue extends Command
     public function handle()
     {
         if (extension_loaded('pcntl')) {
+            pcntl_async_signals(true);
             pcntl_signal(SIGTERM, [$this, 'terminate']);
+            pcntl_signal(SIGINT, [$this, 'terminate']);
         }
 
         $topicName = $this->topicName();
@@ -107,10 +109,9 @@ class JobEnqueue extends Command
         $this->logger->debug($logMessage);
     }
 
-    private function terminate()
+    public function terminate()
     {
         $this->logger->info('Terminating job:enqueue.');
         $this->terminating = true;
     }
-
 }
