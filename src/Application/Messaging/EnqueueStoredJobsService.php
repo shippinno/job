@@ -99,10 +99,10 @@ class EnqueueStoredJobsService
             }
             if ($producer instanceof SqsProducer) {
                 foreach (array_chunk($messages, 10) as $i => $chunk) {
-                    $enqueuedMessagesCount = $enqueuedMessagesCount + count($chunk);
                     $enqueuedMessageIds = $producer->sendAll($topic, array_column($chunk, 'message'));
                     foreach ($enqueuedMessageIds as $messageId) {
                         $this->jobFlightManager->departed($messageId);
+                        $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
                     }
                 }
             } else {
