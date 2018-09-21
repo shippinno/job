@@ -37,11 +37,6 @@ class EnqueueStoredJobsService
     private $storedJobSerializer;
 
     /**
-     * @var EnqueuedStoredJobTrackerStore
-     */
-    protected $enqueuedStoredJobTrackerStore;
-
-    /**
      * @var JobFlightManager
      */
     private $jobFlightManager;
@@ -50,7 +45,6 @@ class EnqueueStoredJobsService
      * @param PsrContext $context
      * @param JobStore $jobStore
      * @param StoredJobSerializer $storedJobSerializer
-     * @param EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore
      * @param JobFlightManager|null $jobFlightManager
      * @param LoggerInterface|null $logger
      */
@@ -58,14 +52,12 @@ class EnqueueStoredJobsService
         PsrContext $context,
         JobStore $jobStore,
         StoredJobSerializer $storedJobSerializer,
-        EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore,
         JobFlightManager $jobFlightManager = null,
         LoggerInterface $logger = null
     ) {
         $this->context = $context;
         $this->jobStore = $jobStore;
         $this->storedJobSerializer = $storedJobSerializer;
-        $this->enqueuedStoredJobTrackerStore = $enqueuedStoredJobTrackerStore;
         $this->jobFlightManager = $jobFlightManager ?: new NullJobFlightManager;
         $this->setLogger($logger ?: new NullLogger);
     }
@@ -78,12 +70,12 @@ class EnqueueStoredJobsService
     public function execute(string $topicName): int
     {
         $enqueuedMessagesCount = 0;
-        $lastEnqueuedStoredJob = null;
-        $jobFlightIds = $this->jobFlightManager->preBoardingJobFlights($topicName);
-        if (0 === count($jobFlightIds)) {
+        $preBoardingJobIds = $this->jobFlightManager->preBoardingJobFlights($topicName);
+        if (0 === count($preBoardingJobIds)) {
             return $enqueuedMessagesCount;
         }
-        $storedJobsToEnqueue = $this->jobStore->storedJobsOfIds($jobFlightIds);
+        $this->logger->debug('Enqueueing jobs: ' . implode(',', $preBoardingJobIds));
+        $storedJobsToEnqueue = $this->jobStore->storedJobsOfIds($preBoardingJobIds);
         $producer = $this->createProducer();
         $topic = $this->createTopic($topicName);
         try {
@@ -107,46 +99,24 @@ class EnqueueStoredJobsService
             }
             if ($producer instanceof SqsProducer) {
                 foreach (array_chunk($messages, 10) as $i => $chunk) {
-                    /** @var PsrMessage[] $chunk */
                     $enqueuedMessagesCount = $enqueuedMessagesCount + count($chunk);
-                    $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i * 10 + count($chunk) - 1];
-                    $producer->sendAll($topic, array_column($chunk, 'message'));
-                    foreach ($chunk as $message) {
-                        $this->jobFlightManager->departed($message['message']->getMessageId());
+                    $enqueuedMessageIds = $producer->sendAll($topic, array_column($chunk, 'message'));
+                    foreach ($enqueuedMessageIds as $messageId) {
+                        $this->jobFlightManager->departed($messageId);
                     }
                 }
             } else {
                 foreach ($messages as $i => $message) {
                     $producer->send($topic, $message['message']);
                     $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
-                    $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i];
                     $this->jobFlightManager->departed($message['message']->getMessageId());
                 }
             }
         } catch (Throwable $e) {
             throw new FailedToEnqueueStoredJobException($enqueuedMessagesCount, $e);
-        } finally {
-            if (null !== $lastEnqueuedStoredJob) {
-                $this->enqueuedStoredJobTrackerStore->trackLastEnqueuedStoredJob($topicName, $lastEnqueuedStoredJob);
-                $this->logger->debug('last enqueued stored job update:',
-                    ['jobId'=> $lastEnqueuedStoredJob->id()]);
-            }
         }
 
         return $enqueuedMessagesCount;
-    }
-
-    /**
-     * @param string $topicName
-     * @return StoredJob[]
-     */
-    private function getStoredJobsToEnqueue(string $topicName): array
-    {
-        $this->logger->debug('last enqueued stored job:',
-            ['jobId'=> $this->enqueuedStoredJobTrackerStore->lastEnqueuedStoredJobId($topicName)]);
-        return $this->jobStore->storedJobsSince(
-            $this->enqueuedStoredJobTrackerStore->lastEnqueuedStoredJobId($topicName)
-        );
     }
 
     /**
