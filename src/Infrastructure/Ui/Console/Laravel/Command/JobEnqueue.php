@@ -28,6 +28,11 @@ class JobEnqueue extends Command
     private $service;
 
     /**
+     * @var bool
+     */
+    private $terminating = false;
+
+    /**
      * @param EnqueueStoredJobsService $service
      * @param ManagerRegistry|null $managerRegistry
      * @param LoggerInterface|null $logger
@@ -45,6 +50,10 @@ class JobEnqueue extends Command
 
     public function handle()
     {
+        if (extension_loaded('pcntl')) {
+            pcntl_signal(SIGTERM, [$this, 'terminate']);
+        }
+
         $topicName = $this->topicName();
         $testing = env('JOB_TESTING', false);
         do {
@@ -69,7 +78,7 @@ class JobEnqueue extends Command
                 sleep($interval);
                 continue;
             }
-        } while (!$testing);
+        } while (!$this->terminating && !$testing);
     }
 
     /**
@@ -96,6 +105,12 @@ class JobEnqueue extends Command
         }
         $this->flush();
         $this->logger->debug($logMessage);
+    }
+
+    private function terminate()
+    {
+        $this->logger->info('Terminating job:enqueue.');
+        $this->terminating = true;
     }
 
 }
