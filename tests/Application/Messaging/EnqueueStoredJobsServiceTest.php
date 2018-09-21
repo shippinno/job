@@ -10,10 +10,8 @@ use Enqueue\Null\NullTopic;
 use Enqueue\Sqs\SqsContext;
 use Enqueue\Sqs\SqsProducer;
 use Exception;
-use Interop\Queue\PsrContext;
 use Mockery;
 use PHPUnit\Framework\TestCase;
-use Shippinno\Job\Application\Messaging\EnqueuedStoredJobTrackerStore;
 use Shippinno\Job\Application\Messaging\EnqueueStoredJobsService;
 use Shippinno\Job\Application\Messaging\JobFlightManager;
 use Shippinno\Job\Domain\Model\FailedToEnqueueStoredJobException;
@@ -29,17 +27,15 @@ class EnqueueStoredJobsServiceTest extends TestCase
         $context = new NullContext;
         $jobStore = Mockery::mock(JobStore::class);
         $storedJobSerializer = new SimpleStoredJobSerializer;
-        $enqueuedStoredJobTrackerStore = Mockery::mock(EnqueuedStoredJobTrackerStore::class);
         $jobFlightManager = Mockery::mock(JobFlightManager::class);
         $jobFlightManager
-            ->shouldReceive('preBoardingJobFlights')
+            ->shouldReceive('undepartedJobFlights')
             ->with('TOPIC')
             ->andReturn([]);
         $service = new EnqueueStoredJobsService(
             $context,
             $jobStore,
             $storedJobSerializer,
-            $enqueuedStoredJobTrackerStore,
             $jobFlightManager
         );
         $this->assertSame(0, $service->execute('TOPIC'));
@@ -59,22 +55,9 @@ class EnqueueStoredJobsServiceTest extends TestCase
             ->once()
             ->andReturn($storedJobs);
         $storedJobSerializer = new SimpleStoredJobSerializer;
-        $enqueuedStoredJobTrackerStore = Mockery::mock(EnqueuedStoredJobTrackerStore::class);
-        $enqueuedStoredJobTrackerStore
-            ->shouldReceive(['lastEnqueuedStoredJobId' => null])
-            ->shouldReceive('trackLastEnqueuedStoredJob')
-            ->once()
-            ->withArgs([
-                Mockery::on(function (string $topic) {
-                    return 'TOPIC' === $topic;
-                }),
-                Mockery::on(function (FakeStoredJob $storedJob) {
-                    return 2 === $storedJob->id();
-                })
-            ]);
         $jobFlightManager = Mockery::mock(JobFlightManager::class);
         $jobFlightManager
-            ->shouldReceive('preBoardingJobFlights')
+            ->shouldReceive('undepartedJobFlights')
             ->with('TOPIC')
             ->andReturn([1, 2])
             ->shouldReceive('boarding')->once()->with(1)
@@ -85,7 +68,6 @@ class EnqueueStoredJobsServiceTest extends TestCase
             $context,
             $jobStore,
             $storedJobSerializer,
-            $enqueuedStoredJobTrackerStore,
             $jobFlightManager
         );
         $this->assertSame(2, $service->execute('TOPIC'));
@@ -134,22 +116,9 @@ class EnqueueStoredJobsServiceTest extends TestCase
             ->shouldReceive('storedJobsOfIds')
             ->withArgs([[1, 2]])
             ->andReturn($storedJobs);
-        $enqueuedStoredJobTrackerStore = Mockery::mock(EnqueuedStoredJobTrackerStore::class);
-        $enqueuedStoredJobTrackerStore
-            ->shouldReceive(['lastEnqueuedStoredJobId' => 0])
-            ->shouldReceive('trackLastEnqueuedStoredJob')
-            ->once()
-            ->withArgs([
-                Mockery::on(function (string $topic) {
-                    return 'TOPIC' === $topic;
-                }),
-                Mockery::on(function (StoredJob $storedJob) {
-                    return 1 === $storedJob->id();
-                })
-            ]);
         $jobFlightManager = Mockery::mock(JobFlightManager::class);
         $jobFlightManager
-            ->shouldReceive('preBoardingJobFlights')
+            ->shouldReceive('undepartedJobFlights')
             ->with('TOPIC')
             ->andReturn([1, 2])
             ->shouldReceive('boarding')->once()->with(1)
@@ -158,7 +127,6 @@ class EnqueueStoredJobsServiceTest extends TestCase
             $context,
             $jobStore,
             $storedJobSerializer,
-            $enqueuedStoredJobTrackerStore,
             $jobFlightManager
         );
         $service->execute('TOPIC');
@@ -173,7 +141,8 @@ class EnqueueStoredJobsServiceTest extends TestCase
         $producer = Mockery::mock(SqsProducer::class);
         $producer
             ->shouldReceive('sendAll')
-            ->once();
+            ->once()
+            ->andReturn([1, 2]);
         $context = Mockery::mock(SqsContext::class)->makePartial();
         $context
             ->shouldReceive('createProducer')
@@ -186,22 +155,9 @@ class EnqueueStoredJobsServiceTest extends TestCase
             ->once()
             ->andReturn($storedJobs);
         $storedJobSerializer = new SimpleStoredJobSerializer;
-        $enqueuedStoredJobTrackerStore = Mockery::mock(EnqueuedStoredJobTrackerStore::class);
-        $enqueuedStoredJobTrackerStore
-            ->shouldReceive(['lastEnqueuedStoredJobId' => null])
-            ->shouldReceive('trackLastEnqueuedStoredJob')
-            ->once()
-            ->withArgs([
-                Mockery::on(function (string $topic) {
-                    return 'TOPIC' === $topic;
-                }),
-                Mockery::on(function (FakeStoredJob $storedJob) {
-                    return 2 === $storedJob->id();
-                })
-            ]);
         $jobFlightManager = Mockery::mock(JobFlightManager::class);
         $jobFlightManager
-            ->shouldReceive('preBoardingJobFlights')
+            ->shouldReceive('undepartedJobFlights')
             ->with('TOPIC')
             ->andReturn([1, 2])
             ->shouldReceive('boarding')->once()->with(1)
@@ -212,7 +168,6 @@ class EnqueueStoredJobsServiceTest extends TestCase
             $context,
             $jobStore,
             $storedJobSerializer,
-            $enqueuedStoredJobTrackerStore,
             $jobFlightManager
         );
         $this->assertSame(2, $service->execute('TOPIC'));
@@ -241,22 +196,9 @@ class EnqueueStoredJobsServiceTest extends TestCase
             ->once()
             ->andReturn($storedJobs);
         $storedJobSerializer = new SimpleStoredJobSerializer;
-        $enqueuedStoredJobTrackerStore = Mockery::mock(EnqueuedStoredJobTrackerStore::class);
-        $enqueuedStoredJobTrackerStore
-            ->shouldReceive(['lastEnqueuedStoredJobId' => null])
-            ->shouldReceive('trackLastEnqueuedStoredJob')
-            ->once()
-            ->withArgs([
-                Mockery::on(function (string $topic) {
-                    return 'TOPIC' === $topic;
-                }),
-                Mockery::on(function (FakeStoredJob $storedJob) {
-                    return 2 === $storedJob->id();
-                })
-            ]);
         $jobFlightManager = Mockery::mock(JobFlightManager::class);
         $jobFlightManager
-            ->shouldReceive('preBoardingJobFlights')
+            ->shouldReceive('undepartedJobFlights')
             ->with('TOPIC')
             ->andReturn([1, 2])
             ->shouldReceive('boarding')->once()->with(1)
@@ -267,7 +209,6 @@ class EnqueueStoredJobsServiceTest extends TestCase
             $context,
             $jobStore,
             $storedJobSerializer,
-            $enqueuedStoredJobTrackerStore,
             $jobFlightManager
         );
         try {
@@ -293,26 +234,13 @@ class EnqueueStoredJobsServiceTest extends TestCase
             ->once()
             ->andReturn($storedJobs);
         $storedJobSerializer = new SimpleStoredJobSerializer;
-        $enqueuedStoredJobTrackerStore = Mockery::mock(EnqueuedStoredJobTrackerStore::class);
-        $enqueuedStoredJobTrackerStore
-            ->shouldReceive(['lastEnqueuedStoredJobId' => null])
-            ->shouldReceive('trackLastEnqueuedStoredJob')
-            ->once()
-            ->withArgs([
-                Mockery::on(function (string $topic) {
-                    return 'TOPIC' === $topic;
-                }),
-                Mockery::on(function (FakeStoredJob $storedJob) {
-                    return 10000 === $storedJob->id();
-                })
-            ]);
 
         //1万件のJobそれぞれに対してDBにStoreされるようになっているか
         $calledBoarding = 0;
         $calledDeparted = 0;
         $jobFlightManager = Mockery::mock(JobFlightManager::class);
         $jobFlightManager
-            ->shouldReceive('preBoardingJobFlights')
+            ->shouldReceive('undepartedJobFlights')
             ->with('TOPIC')
             ->andReturn(range(1, 10000))
             ->shouldReceive('boarding')
@@ -329,7 +257,6 @@ class EnqueueStoredJobsServiceTest extends TestCase
             $context,
             $jobStore,
             $storedJobSerializer,
-            $enqueuedStoredJobTrackerStore,
             $jobFlightManager
         );
 
@@ -347,7 +274,8 @@ class EnqueueStoredJobsServiceTest extends TestCase
         $producer = Mockery::mock(SqsProducer::class);
         $producer
             ->shouldReceive('sendAll')
-            ->once();
+            ->once()
+            ->andReturn(range(1, 10000));
         $context = Mockery::mock(SqsContext::class)->makePartial();
         $context
             ->shouldReceive('createProducer')
@@ -360,26 +288,13 @@ class EnqueueStoredJobsServiceTest extends TestCase
             ->once()
             ->andReturn($storedJobs);
         $storedJobSerializer = new SimpleStoredJobSerializer;
-        $enqueuedStoredJobTrackerStore = Mockery::mock(EnqueuedStoredJobTrackerStore::class);
-        $enqueuedStoredJobTrackerStore
-            ->shouldReceive(['lastEnqueuedStoredJobId' => null])
-            ->shouldReceive('trackLastEnqueuedStoredJob')
-            ->once()
-            ->withArgs([
-                Mockery::on(function (string $topic) {
-                    return 'TOPIC' === $topic;
-                }),
-                Mockery::on(function (FakeStoredJob $storedJob) {
-                    return 10000 === $storedJob->id();
-                })
-            ]);
 
         // 1万件のJobそれぞれに対してDBにStoreされるようになっているか TODO: 10秒かかる
         $calledBoarding = 0;
         $calledDeparted = 0;
         $jobFlightManager = Mockery::mock(JobFlightManager::class);
         $jobFlightManager
-            ->shouldReceive('preBoardingJobFlights')
+            ->shouldReceive('undepartedJobFlights')
             ->with('TOPIC')
             ->andReturn(range(1, 10000))
             ->shouldReceive('boarding')
@@ -397,7 +312,6 @@ class EnqueueStoredJobsServiceTest extends TestCase
             $context,
             $jobStore,
             $storedJobSerializer,
-            $enqueuedStoredJobTrackerStore,
             $jobFlightManager
         );
 
