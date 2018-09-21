@@ -49,9 +49,11 @@ class DoctrineJobStore extends EntityRepository implements JobStore
     public function storedJobsSince(?int $jobId): array
     {
         $query = $this->createQueryBuilder('j');
+        $query->where('j.createdAt < :createdBefore');
+        $query->setParameter('createdBefore', new \DateTimeImmutable('-1 minute'));
         if (null !== $jobId) {
-            $query->where('j.id > :id');
-            $query->setParameters(['id' => $jobId]);
+            $query->andWhere('j.id > :id');
+            $query->setParameter('id', $jobId);
         }
         $query->setMaxResults(100);
         $query->orderBy('j.id');

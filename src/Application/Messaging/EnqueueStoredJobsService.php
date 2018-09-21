@@ -8,6 +8,9 @@ use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrProducer;
 use Interop\Queue\PsrTopic;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Shippinno\Job\Domain\Model\StoredJob;
 use Shippinno\Job\Domain\Model\JobStore;
 use Shippinno\Job\Domain\Model\FailedToEnqueueStoredJobException;
@@ -16,6 +19,8 @@ use Throwable;
 
 class EnqueueStoredJobsService
 {
+    use LoggerAwareTrait;
+
     /**
      * @var PsrContext
      */
@@ -47,19 +52,22 @@ class EnqueueStoredJobsService
      * @param StoredJobSerializer $storedJobSerializer
      * @param EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore
      * @param JobFlightManager|null $jobFlightManager
+     * @param LoggerInterface $logger
      */
     public function __construct(
         PsrContext $context,
         JobStore $jobStore,
         StoredJobSerializer $storedJobSerializer,
         EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore,
-        JobFlightManager $jobFlightManager = null
+        JobFlightManager $jobFlightManager = null,
+        LoggerInterface $logger = null
     ) {
         $this->context = $context;
         $this->jobStore = $jobStore;
         $this->storedJobSerializer = $storedJobSerializer;
         $this->enqueuedStoredJobTrackerStore = $enqueuedStoredJobTrackerStore;
         $this->jobFlightManager = $jobFlightManager ?: new NullJobFlightManager;
+        $this->setLogger($logger ?: new NullLogger);
     }
 
     /**
@@ -69,9 +77,19 @@ class EnqueueStoredJobsService
      */
     public function execute(string $topicName): int
     {
+        sleep(1);
+        $uniq = uniqid();
         $enqueuedMessagesCount = 0;
         $lastEnqueuedStoredJob = null;
         $storedJobsToEnqueue = $this->getStoredJobsToEnqueue($topicName);
+        if (count($storedJobsToEnqueue) > 0) {
+            $this->logger->debug('[' . $uniq . '] <= uniq!');
+            $this->logger->debug('[' . $uniq . '] Last job ID to enqueue: ' . $storedJobsToEnqueue[count($storedJobsToEnqueue) - 1]->id());
+            $ids = array_map(function (StoredJob $job) {
+                return $job->id();
+            }, $storedJobsToEnqueue);
+            $this->logger->debug('[' . $uniq . '] Job Ids to enqueue: '. implode(',', $ids));
+        }
         if (0 === count($storedJobsToEnqueue)) {
             return $enqueuedMessagesCount;
         }
@@ -96,6 +114,7 @@ class EnqueueStoredJobsService
                     'message' => $message
                 ];
             }
+            $this->logger->debug('[' . $uniq . '] Counting messages: ' . count($messages));
             if ($producer instanceof SqsProducer) {
                 foreach (array_chunk($messages, 10) as $i => $chunk) {
                     $enqueuedMessagesCount = $enqueuedMessagesCount + count($chunk);
@@ -125,6 +144,7 @@ class EnqueueStoredJobsService
             throw new FailedToEnqueueStoredJobException($enqueuedMessagesCount, $e);
         } finally {
             if (null !== $lastEnqueuedStoredJob) {
+                $this->logger->debug('[' . $uniq . '] Last job ID enqueued: ' . $lastEnqueuedStoredJob->id());
                 $this->enqueuedStoredJobTrackerStore->trackLastEnqueuedStoredJob($topicName, $lastEnqueuedStoredJob);
             }
         }

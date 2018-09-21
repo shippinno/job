@@ -2,6 +2,7 @@
 
 namespace Shippinno\Job\Test\Domain\Model;
 
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
@@ -38,7 +39,7 @@ class DoctrineJobStoreTest extends TestCase
 
     public function testStoredJobsSinceWithJobIdNull()
     {
-        $this->jobStore->append(new FakeJob);
+        $this->jobStore->append(new FakeJob(false, new DateTimeImmutable('-2 minutes')));
         $this->entityManager->flush();
         $storedJobs = $this->jobStore->storedJobsSince(null);
         $this->assertCount(1, $storedJobs);
@@ -47,14 +48,13 @@ class DoctrineJobStoreTest extends TestCase
 
     public function testStoredJobsSinceWithJobId()
     {
-        $this->jobStore->append(new FakeJob);
-        $this->jobStore->append(new FakeJob);
-        $this->jobStore->append(new FakeJob);
+        $this->jobStore->append(new FakeJob(false, new DateTimeImmutable('-3 minutes')));
+        $this->jobStore->append(new FakeJob(false, new DateTimeImmutable('-2 minutes')));
+        $this->jobStore->append(new FakeJob(false, new DateTimeImmutable('-1 minutes')));
         $this->entityManager->flush();
         $storedJobs = $this->jobStore->storedJobsSince(1);
-        $this->assertCount(2, $storedJobs);
+        $this->assertCount(1, $storedJobs);
         $this->assertSame(2, $storedJobs[0]->id());
-        $this->assertSame(3, $storedJobs[1]->id());
     }
 
     protected function initEntityManager(): EntityManager
