@@ -125,9 +125,15 @@ class ConsumeStoredJobService
                     'Persistence failed after the job. Requeueing the message.',
                     ['message' => $message->getBody()]
                 );
-                $newMessageId = $message->getMessageId() . '+';
-                $this->jobFlightManager->requeued($message->getMessageId(), $newMessageId);
+                $newMessageId = $message->getMessageId();
+                $this->jobFlightManager->requeued($message->getMessageId());
                 $message->setMessageId($newMessageId);
+                if (method_exists($message, 'setMessageDeduplicationId')) {
+                    $message->setMessageDeduplicationId(uniqid());
+                }
+                if (method_exists($message, 'setMessageGroupId')) {
+                    $message->setMessageGroupId(uniqid());
+                }
                 $consumer->reject($message, true);
                 return;
             }
@@ -164,16 +170,7 @@ class ConsumeStoredJobService
                 );
                 $this->jobFlightManager->rejected($message->getMessageId());
                 $consumer->reject($message);
-                if (!is_null($persist) && !$persist()) {
-                    $this->logger->info(
-                        'Failed after the job. Requeueing the message.',
-                        ['message' => $message->getBody()]
-                    );
-                    $newMessageId = $message->getMessageId() . '+';
-                    $this->jobFlightManager->requeued($message->getMessageId(), $newMessageId);
-                    $message->setMessageId($newMessageId);
-                    $consumer->reject($message, true);
-                }
+
                 return;
             }
             $message->setProperty('attempts', $attempts);
@@ -187,8 +184,8 @@ class ConsumeStoredJobService
                 $message->setMessageGroupId(is_null($storedJob->fifoGroupId()) ? uniqid() : $storedJob->fifoGroupId());
             }
             $this->logger->info('Requeueing the message.', ['message' => $message->getBody()]);
-            $newMessageId = $message->getMessageId() . '+';
-            $this->jobFlightManager->requeued($message->getMessageId(), $newMessageId);
+            $newMessageId = $message->getMessageId();
+            $this->jobFlightManager->requeued($message->getMessageId());
             $message->setMessageId($newMessageId);
             $consumer->reject($message, true);
         }
