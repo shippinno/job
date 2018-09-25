@@ -122,72 +122,20 @@ class ConsumeStoredJobService
             $jobRunner->run($job);
             if (!is_null($persist) && !$persist()) {
                 $this->logger->info(
-                    'Persistence failed after the job. Requeueing the message.',
+                    'Persistence failed after the job but acknowledging message.',
                     ['message' => $message->getBody()]
                 );
-                $newMessageId = $message->getMessageId();
-                $this->jobFlightManager->requeued($message->getMessageId());
-                $message->setMessageId($newMessageId);
-                if (method_exists($message, 'setMessageDeduplicationId')) {
-                    $message->setMessageDeduplicationId(uniqid());
-                }
-                if (method_exists($message, 'setMessageGroupId')) {
-                    $message->setMessageGroupId(uniqid());
-                }
-                $consumer->reject($message, true);
-                return;
-            }
-            $dependentJobs = $job->dependentJobs();
-            if (count($dependentJobs) > 0) {
-                foreach ($dependentJobs as $dependentJob) {
-                    $this->jobStore->append($dependentJob);
-                }
+                $this->logger->info('Acknowledging message.', ['message' => $message->getBody()]);
+                $this->jobFlightManager->acknowledged($message->getMessageId());
+                exit;
             }
             $this->logger->info('Acknowledging message.', ['message' => $message->getBody()]);
             $this->jobFlightManager->acknowledged($message->getMessageId());
             $consumer->acknowledge($message);
         } catch (JobFailedException $e) {
-            if ($job->isExpendable()) {
-                $this->logger->debug(
-                    'Expendable job failed. Acknowledging and letting it go.',
-                    ['message' => $message->getBody()]
-                );
-                $this->jobFlightManager->letGo($message->getMessageId());
-                $consumer->acknowledge($message);
-                return;
-            }
-            $attempts = $message->getProperty('attempts', 0) + 1;
-            if ($attempts >= $job->maxAttempts()) {
-                if (!is_null($clear)) {
-                    $clear();
-                }
-                $this->abandonedJobMessageStore->add(
-                    new AbandonedJobMessage($queueName, $message->getBody(), $e->__toString())
-                );
-                $this->logger->info(
-                    'Rejecting the message reaching the max attempts.',
-                    ['message' => $message->getBody()]
-                );
-                $this->jobFlightManager->rejected($message->getMessageId());
-                $consumer->reject($message);
-
-                return;
-            }
-            $message->setProperty('attempts', $attempts);
-            if ($job->reattemptDelay() > 0) {
-                $message = $this->delayMessage($message, $job->reattemptDelay());
-            }
-            if (method_exists($message, 'setMessageDeduplicationId')) {
-                $message->setMessageDeduplicationId(uniqid());
-            }
-            if (method_exists($message, 'setMessageGroupId')) {
-                $message->setMessageGroupId(is_null($storedJob->fifoGroupId()) ? uniqid() : $storedJob->fifoGroupId());
-            }
-            $this->logger->info('Requeueing the message.', ['message' => $message->getBody()]);
-            $newMessageId = $message->getMessageId();
-            $this->jobFlightManager->requeued($message->getMessageId());
-            $message->setMessageId($newMessageId);
-            $consumer->reject($message, true);
+            $this->logger->info('Job failed but acknowledging message', ['message' => $message->getBody()]);
+            $this->jobFlightManager->acknowledged($message->getMessageId());
+            $consumer->acknowledge($message);
         }
     }
 
