@@ -10,8 +10,6 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Shippinno\Job\Application\Job\JobRunnerRegistry;
-use Shippinno\Job\Domain\Model\AbandonedJobMessage;
-use Shippinno\Job\Domain\Model\AbandonedJobMessageStore;
 use Shippinno\Job\Domain\Model\JobFailedException;
 use Shippinno\Job\Domain\Model\JobRunnerNotRegisteredException;
 use Shippinno\Job\Domain\Model\JobSerializer;
@@ -48,11 +46,6 @@ class ConsumeStoredJobService
     private $jobStore;
 
     /**
-     * @var AbandonedJobMessageStore
-     */
-    private $abandonedJobMessageStore;
-
-    /**
      * @var JobFlightManager
      */
     private $jobFlightManager;
@@ -63,7 +56,6 @@ class ConsumeStoredJobService
      * @param JobSerializer $jobSerializer
      * @param JobRunnerRegistry $jobRunnerRegistry
      * @param JobStore $jobStore
-     * @param AbandonedJobMessageStore $abandonedJobMessageStore
      * @param JobFlightManager|null $jobFlightManager
      * @param LoggerInterface|null $logger
      */
@@ -73,7 +65,6 @@ class ConsumeStoredJobService
         JobSerializer $jobSerializer,
         JobRunnerRegistry $jobRunnerRegistry,
         JobStore $jobStore,
-        AbandonedJobMessageStore $abandonedJobMessageStore,
         JobFlightManager $jobFlightManager = null,
         LoggerInterface $logger = null
     ) {
@@ -82,7 +73,6 @@ class ConsumeStoredJobService
         $this->jobSerializer = $jobSerializer;
         $this->jobRunnerRegistry = $jobRunnerRegistry;
         $this->jobStore = $jobStore;
-        $this->abandonedJobMessageStore = $abandonedJobMessageStore;
         $this->jobFlightManager = $jobFlightManager ?: new NullJobFlightManager;
         $this->setLogger($logger ?: new NullLogger);
     }
@@ -107,11 +97,8 @@ class ConsumeStoredJobService
         try {
             $jobRunner = $this->jobRunnerRegistry->get(get_class($job));
         } catch (JobRunnerNotRegisteredException $e) {
-            $this->abandonedJobMessageStore->add(
-                new AbandonedJobMessage($queueName, $message->getBody(), $e->__toString())
-            );
             $this->logger->alert(
-                'No JobRunner is registered. Message is abandoned. Rejecting the message.',
+                'No JobRunner is registered. Rejecting the message.',
                 ['message' => $message->getBody()]
             );
             $this->jobFlightManager->rejected($message->getMessageId());
