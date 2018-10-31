@@ -4,10 +4,10 @@ namespace Shippinno\Job\Test\Application\Messaging;
 
 use Enqueue\Null\NullMessage;
 use Enqueue\Sqs\SqsMessage;
-use Interop\Queue\PsrConsumer;
-use Interop\Queue\PsrContext;
-use Interop\Queue\PsrMessage;
-use Interop\Queue\PsrQueue;
+use Interop\Queue\Consumer;
+use Interop\Queue\Context;
+use Interop\Queue\Message;
+use Interop\Queue\Queue;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Job\JobRunnerRegistry;
@@ -227,7 +227,7 @@ class ConsumeStoredJobServiceTest extends TestCase
 
     }
 
-    private function createMessage(string $identifier, Job $job, int $attempts = null, string $messageClass = NullMessage::class): PsrMessage
+    private function createMessage(string $identifier, Job $job, int $attempts = null, string $messageClass = NullMessage::class): Message
     {
         $storedJob = new StoredJob(get_class($job), $this->jobSerializer->serialize($job), $job->createdAt(), $job->isExpendable());
         $message = new $messageClass($this->storedJobSerializer->serialize($storedJob));
@@ -240,9 +240,9 @@ class ConsumeStoredJobServiceTest extends TestCase
         return $message;
     }
 
-    private function createConsumer(?PsrMessage $message)
+    private function createConsumer(?Message $message)
     {
-        $consumer = Mockery::mock(PsrConsumer::class);
+        $consumer = Mockery::mock(Consumer::class);
         $consumer
             ->shouldReceive('receive')
             ->once()
@@ -251,10 +251,10 @@ class ConsumeStoredJobServiceTest extends TestCase
         return $consumer;
     }
 
-    private function createContext(PsrConsumer $consumer)
+    private function createContext(Consumer $consumer)
     {
-        $queue = Mockery::mock(PsrQueue::class);
-        $context = Mockery::mock(PsrContext::class);
+        $queue = Mockery::mock(Queue::class);
+        $context = Mockery::mock(Context::class);
         $context
             ->shouldReceive('createQueue')
             ->once()
@@ -263,7 +263,7 @@ class ConsumeStoredJobServiceTest extends TestCase
             ->shouldReceive('createConsumer')
             ->once()
             ->withArgs([
-                Mockery::on(function (PsrQueue $argument) use ($queue) {
+                Mockery::on(function (Queue $argument) use ($queue) {
                     return $argument === $queue;
                 })
             ])
@@ -271,7 +271,7 @@ class ConsumeStoredJobServiceTest extends TestCase
         return $context;
     }
 
-    private function createService(PsrContext $context, int $dependentJobsCount = 0): ConsumeStoredJobService
+    private function createService(Context $context, int $dependentJobsCount = 0): ConsumeStoredJobService
     {
         $storedJobSerializer = new SimpleStoredJobSerializer;
         $jobSerializer = new SimpleJobSerializer;

@@ -3,7 +3,7 @@
 namespace Shippinno\Job\Application\Messaging;
 
 use Interop\Queue\Exception as QueueException;
-use Interop\Queue\PsrContext;
+use Interop\Queue\Context;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageFailedToRequeueException;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageStore;
@@ -12,7 +12,7 @@ use Shippinno\Job\Domain\Model\StoredJobSerializer;
 class RequeueAbandonedJobMessageService
 {
     /**
-     * @var PsrContext
+     * @var Context
      */
     private $context;
 
@@ -32,13 +32,13 @@ class RequeueAbandonedJobMessageService
     private $jobFlightManager;
 
     /**
-     * @param PsrContext $context
+     * @param Context $context
      * @param AbandonedJobMessageStore $abandonedJobMessageStore
      * @param StoredJobSerializer $storedJobSerializer
      * @param JobFlightManager|null $jobFlightManager
      */
     public function __construct(
-        PsrContext $context,
+        Context $context,
         AbandonedJobMessageStore $abandonedJobMessageStore,
         StoredJobSerializer $storedJobSerializer,
         JobFlightManager $jobFlightManager = null

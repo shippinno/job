@@ -4,10 +4,10 @@ namespace Shippinno\Job\Application\Messaging;
 
 use Enqueue\Sqs\SqsMessage;
 use Enqueue\Sqs\SqsProducer;
-use Interop\Queue\PsrContext;
-use Interop\Queue\PsrMessage;
-use Interop\Queue\PsrProducer;
-use Interop\Queue\PsrTopic;
+use Interop\Queue\Context;
+use Interop\Queue\Message;
+use Interop\Queue\Producer;
+use Interop\Queue\Topic;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -22,7 +22,7 @@ class EnqueueStoredJobsService
     use LoggerAwareTrait;
 
     /**
-     * @var PsrContext
+     * @var Context
      */
     private $context;
 
@@ -47,7 +47,7 @@ class EnqueueStoredJobsService
     private $jobFlightManager;
 
     /**
-     * @param PsrContext $context
+     * @param Context $context
      * @param JobStore $jobStore
      * @param StoredJobSerializer $storedJobSerializer
      * @param EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore
@@ -55,7 +55,7 @@ class EnqueueStoredJobsService
      * @param LoggerInterface $logger
      */
     public function __construct(
-        PsrContext $context,
+        Context $context,
         JobStore $jobStore,
         StoredJobSerializer $storedJobSerializer,
         EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore,
@@ -96,7 +96,7 @@ class EnqueueStoredJobsService
         $producer = $this->createProducer();
         $topic = $this->createTopic($topicName);
         try {
-            /** @var PsrMessage[] $messages */
+            /** @var Message[] $messages */
             $messages = [];
             foreach ($storedJobsToEnqueue as $storedJob) {
                 $message = $this->createMessage($storedJob);
@@ -164,9 +164,9 @@ class EnqueueStoredJobsService
     }
 
     /**
-     * @return PsrProducer
+     * @return Producer
      */
-    protected function createProducer(): PsrProducer
+    protected function createProducer(): Producer
     {
         $producer = $this->context->createProducer();
 
@@ -175,9 +175,9 @@ class EnqueueStoredJobsService
 
     /**
      * @param string $topicName
-     * @return PsrTopic
+     * @return Topic
      */
-    protected function createTopic(string $topicName): PsrTopic
+    protected function createTopic(string $topicName): Topic
     {
         $topic = $this->context->createTopic($topicName);
 
@@ -186,9 +186,9 @@ class EnqueueStoredJobsService
 
     /**
      * @param StoredJob $storedJob
-     * @return PsrMessage
+     * @return Message
      */
-    protected function createMessage(StoredJob $storedJob): PsrMessage
+    protected function createMessage(StoredJob $storedJob): Message
     {
         $message = $this->context->createMessage($this->storedJobSerializer->serialize($storedJob));
 

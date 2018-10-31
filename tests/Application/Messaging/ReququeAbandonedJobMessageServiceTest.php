@@ -4,10 +4,10 @@ namespace Shippinno\Job\Test\Application\Messaging;
 
 use DateTimeImmutable;
 use Enqueue\Null\NullContext;
-use Interop\Queue\InvalidMessageException;
-use Interop\Queue\PsrMessage;
-use Interop\Queue\PsrProducer;
-use Interop\Queue\PsrQueue;
+use Interop\Queue\Exception\InvalidMessageException;
+use Interop\Queue\Message;
+use Interop\Queue\Producer;
+use Interop\Queue\Queue;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Messaging\RequeueAbandonedJobMessageService;
@@ -46,7 +46,7 @@ class ReququeAbandonedJobMessageServiceTest extends TestCase
         $storedJobSerializer->shouldReceive([
             'deserialize' => new FakeStoredJob('name', 'body', new DateTimeImmutable(), 1),
         ]);
-        $producer = Mockery::mock(PsrProducer::class);
+        $producer = Mockery::mock(Producer::class);
         $producer
             ->shouldReceive('send')
             ->once()
@@ -71,14 +71,14 @@ class ReququeAbandonedJobMessageServiceTest extends TestCase
         $storedJobSerializer->shouldReceive([
             'deserialize' => new FakeStoredJob('name', 'body', new DateTimeImmutable(), 1),
         ]);
-        $producer = Mockery::mock(PsrProducer::class);
+        $producer = Mockery::mock(Producer::class);
         $producer
             ->shouldReceive('send')
             ->withArgs([
-                Mockery::on(function (PsrQueue $queue) {
+                Mockery::on(function (Queue $queue) {
                     return 'QUEUE_NAME' === $queue->getQueueName();
                 }),
-                Mockery::on(function (PsrMessage $message) {
+                Mockery::on(function (Message $message) {
                     return 'MESSAGE' === $message->getBody();
                 }),
             ])

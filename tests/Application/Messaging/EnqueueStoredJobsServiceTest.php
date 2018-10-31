@@ -10,7 +10,6 @@ use Enqueue\Null\NullTopic;
 use Enqueue\Sqs\SqsContext;
 use Enqueue\Sqs\SqsProducer;
 use Exception;
-use Interop\Queue\PsrContext;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Messaging\EnqueuedStoredJobTrackerStore;

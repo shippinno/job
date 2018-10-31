@@ -4,8 +4,8 @@ namespace Shippinno\Job\Application\Messaging;
 
 use Closure;
 use Enqueue\Sqs\SqsMessage;
-use Interop\Queue\PsrContext;
-use Interop\Queue\PsrMessage;
+use Interop\Queue\Context;
+use Interop\Queue\Message;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -26,7 +26,7 @@ class ConsumeStoredJobService
     private $storedJobSerializer;
 
     /**
-     * @var PsrContext
+     * @var Context
      */
     private $context;
 
@@ -51,7 +51,7 @@ class ConsumeStoredJobService
     private $jobFlightManager;
 
     /**
-     * @param PsrContext $context
+     * @param Context $context
      * @param StoredJobSerializer $storedJobSerializer
      * @param JobSerializer $jobSerializer
      * @param JobRunnerRegistry $jobRunnerRegistry
@@ -60,7 +60,7 @@ class ConsumeStoredJobService
      * @param LoggerInterface|null $logger
      */
     public function __construct(
-        PsrContext $context,
+        Context $context,
         StoredJobSerializer $storedJobSerializer,
         JobSerializer $jobSerializer,
         JobRunnerRegistry $jobRunnerRegistry,
@@ -127,11 +127,11 @@ class ConsumeStoredJobService
     }
 
     /**
-     * @param PsrMessage $message
+     * @param Message $message
      * @param int $delay
-     * @return PsrMessage
+     * @return Message
      */
-    protected function delayMessage(PsrMessage $message, int $delay)
+    protected function delayMessage(Message $message, int $delay)
     {
         if ($message instanceof SqsMessage) {
             $message->setDelaySeconds($delay);
