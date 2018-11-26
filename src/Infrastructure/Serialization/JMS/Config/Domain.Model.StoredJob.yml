@@ -11,5 +11,7 @@ Shippinno\Job\Domain\Model\StoredJob:
             type: DateTimeImmutable
         fifoGroupId:
             type: string
+        deduplicationId:
+            type: string
         isExpendable:
             type: boolean
