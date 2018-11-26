@@ -106,6 +106,14 @@ abstract class Job
     }
 
     /**
+     * @return string
+     */
+    public function deduplicationId(): string
+    {
+        return null;
+    }
+
+    /**
      * @return Job[]
      */
     public function dependentJobs(): array

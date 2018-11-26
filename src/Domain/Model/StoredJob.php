@@ -37,17 +37,32 @@ class StoredJob
     private $fifoGroupId;
 
     /**
+     * @var null|string
+     */
+    private $deduplicationId;
+
+    /**
      * @param string $name
      * @param string $body
      * @param DateTimeImmutable $createdAt
+     * @param bool $isExpendable
+     * @param string|null $fifoGroupId
+     * @param string|null $deduplicationId
      */
-    public function __construct(string $name, string $body, DateTimeImmutable $createdAt, bool $isExpendable, string $fifoGroupId = null)
-    {
+    public function __construct(
+        string $name,
+        string $body,
+        DateTimeImmutable $createdAt,
+        bool $isExpendable,
+        string $fifoGroupId = null,
+        string $deduplicationId = null
+    ) {
         $this->name = $name;
         $this->body = $body;
         $this->createdAt = $createdAt;
         $this->isExpendable = $isExpendable;
         $this->fifoGroupId = $fifoGroupId;
+        $this->deduplicationId = $deduplicationId;
     }
 
     /**
@@ -96,5 +111,13 @@ class StoredJob
     public function fifoGroupId(): ?string
     {
         return $this->fifoGroupId;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function deduplicationId(): ?string
+    {
+        return $this->deduplicationId;
     }
 }

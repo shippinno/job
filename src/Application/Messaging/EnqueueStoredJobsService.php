@@ -102,7 +102,11 @@ class EnqueueStoredJobsService
                 $message = $this->createMessage($storedJob);
                 $message->setMessageId($storedJob->id());
                 if ($message instanceof SqsMessage) {
-                    $message->setMessageDeduplicationId(uniqid());
+                    $message->setMessageDeduplicationId(
+                        is_null($storedJob->deduplicationId())
+                            ? uniqid()
+                            : $storedJob->deduplicationId()
+                    );
                     $message->setMessageGroupId(
                         is_null($storedJob->fifoGroupId())
                             ? uniqid()

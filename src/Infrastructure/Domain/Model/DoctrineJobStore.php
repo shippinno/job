@@ -38,7 +38,8 @@ class DoctrineJobStore extends EntityRepository implements JobStore
             $this->jobSerializer->serialize($job),
             $job->createdAt(),
             $job->isExpendable(),
-            $job->fifoGroupId()
+            $job->fifoGroupId(),
+            $job->deduplicationId()
         );
         $this->getEntityManager()->persist($storedJob);
     }
