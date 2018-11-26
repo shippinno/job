@@ -108,7 +108,7 @@ abstract class Job
     /**
      * @return string
      */
-    public function deduplicationId(): string
+    public function deduplicationId(): ?string
     {
         return null;
     }
