@@ -105,7 +105,7 @@ class EnqueueStoredJobsService
                     $message->setMessageDeduplicationId(
                         is_null($storedJob->deduplicationId())
                             ? uniqid()
-                            : $storedJob->fifoGroupId()
+                            : $storedJob->deduplicationId()
                     );
                     $message->setMessageGroupId(
                         is_null($storedJob->fifoGroupId())
