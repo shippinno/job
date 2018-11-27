@@ -103,7 +103,9 @@ class EnqueueStoredJobsService
                 $message->setMessageId($storedJob->id());
                 if ($message instanceof SqsMessage) {
                     $message->setMessageDeduplicationId(
-                        $storedJob->deduplicationId()
+                        is_null($storedJob->deduplicationId())
+                            ? uniqid()
+                            : $storedJob->fifoGroupId()
                     );
                     $message->setMessageGroupId(
                         is_null($storedJob->fifoGroupId())
