@@ -7,7 +7,31 @@ class NullJobFlightManager implements JobFlightManager
     /**
      * {@inheritdoc}
      */
-    public function departed(int $jobId, string $jobName, string $queue): void
+    public function created(int $jobId, string $jobName, string $queue): void
+    {
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function boarding(int $jobId): void
+    {
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function departed(int $jobId): void
+    {
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function arrived(int $jobId): void
     {
 
     }
@@ -59,4 +83,13 @@ class NullJobFlightManager implements JobFlightManager
     {
 
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function undepartedJobFlights(string $queue): array
+    {
+
+    }
 }
+

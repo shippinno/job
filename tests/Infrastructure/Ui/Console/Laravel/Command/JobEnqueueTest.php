@@ -89,4 +89,18 @@ class JobEnqueueTest extends TestCase
         $command->run(new ArrayInput([]), new DummyOutput);
         $this->assertTrue(true);
     }
+
+    public function testThatTermSignalIsHandled()
+    {
+        $service = Mockery::mock(EnqueueStoredJobsService::class);
+        $service
+            ->shouldReceive('execute')
+            ->once()
+            ->andReturn(1);
+        $command = new JobEnqueue($service);
+        $command->setLaravel(new Container);
+        $command->run(new ArrayInput([]), new DummyOutput);
+
+        $this->assertTrue(true);
+    }
 }

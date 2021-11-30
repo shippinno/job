@@ -9,13 +9,23 @@ interface JobFlightManager
      * @param string $jobName
      * @param string $queue
      */
-    public function departed(int $jobId, string $jobName, string $queue): void;
+    public function created(int $jobId, string $jobName, string $queue): void;
 
     /**
      * @param int $jobId
-     * @return null|JobFlight
+     * @return mixed
      */
-    public function latestJobFlightOfJobId(int $jobId): ?JobFlight;
+    public function boarding(int $jobId): void;
+
+    /**
+     * @param int $jobId
+     */
+    public function departed(int $jobId): void;
+
+    /**
+     * @param int $jobId
+     */
+    public function arrived(int $jobId): void;
 
     /**
      * @param int $jobId
@@ -41,4 +51,16 @@ interface JobFlightManager
      * @param int $jobId
      */
     public function letGo(int $jobId): void;
+
+    /**
+     * @param int $jobId
+     * @return null|JobFlight
+     */
+    public function latestJobFlightOfJobId(int $jobId): ?JobFlight;
+
+    /**
+     * @param string $queue
+     * @return int[]
+     */
+    public function undepartedJobFlights(string $queue): array;
 }

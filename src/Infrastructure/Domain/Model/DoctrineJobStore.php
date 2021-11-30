@@ -5,6 +5,7 @@ namespace Shippinno\Job\Infrastructure\Domain\Model;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Shippinno\Job\Application\Messaging\JobFlightManager;
 use Shippinno\Job\Domain\Model\Job;
 use Shippinno\Job\Domain\Model\JobSerializer;
 use Shippinno\Job\Domain\Model\JobStore;
@@ -22,8 +23,11 @@ class DoctrineJobStore extends EntityRepository implements JobStore
      * @param ClassMetadata $class
      * @param JobSerializer $jobSerializer
      */
-    public function __construct(EntityManager $em, ClassMetadata $class, JobSerializer $jobSerializer)
-    {
+    public function __construct(
+        EntityManager $em,
+        ClassMetadata $class,
+        JobSerializer $jobSerializer
+    ) {
         parent::__construct($em, $class);
         $this->jobSerializer = $jobSerializer;
     }
@@ -31,7 +35,7 @@ class DoctrineJobStore extends EntityRepository implements JobStore
     /**
      * {@inheritdoc}
      */
-    public function append(Job $job): void
+    public function append(Job $job): StoredJob
     {
         $storedJob = new StoredJob(
             get_class($job),
@@ -42,6 +46,8 @@ class DoctrineJobStore extends EntityRepository implements JobStore
             $job->deduplicationId()
         );
         $this->getEntityManager()->persist($storedJob);
+
+        return $storedJob;
     }
 
     /**
@@ -71,5 +77,19 @@ class DoctrineJobStore extends EntityRepository implements JobStore
         $storedJob = $this->find($jobId);
 
         return $storedJob;
+    }
+
+    /**
+     * @param int[] $jobIds
+     * @return StoredJob[]
+     */
+    public function storedJobsOfIds(array $jobIds): array
+    {
+        $queryBuilder = $this->createQueryBuilder('j');
+        $queryBuilder
+            ->where($queryBuilder->expr()->in('j.id', $jobIds))
+            ->orderBy('j.id');
+
+        return $queryBuilder->getQuery()->getResult();
     }
 }

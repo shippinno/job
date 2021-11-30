@@ -37,11 +37,6 @@ class EnqueueStoredJobsService
     private $storedJobSerializer;
 
     /**
-     * @var EnqueuedStoredJobTrackerStore
-     */
-    protected $enqueuedStoredJobTrackerStore;
-
-    /**
      * @var JobFlightManager
      */
     private $jobFlightManager;
@@ -50,7 +45,6 @@ class EnqueueStoredJobsService
      * @param Context $context
      * @param JobStore $jobStore
      * @param StoredJobSerializer $storedJobSerializer
-     * @param EnqueuedStoredJobTrackerStore $enqueuedStoredJobTrackerStore
      * @param JobFlightManager|null $jobFlightManager
      * @param LoggerInterface $logger
      */
@@ -65,7 +59,6 @@ class EnqueueStoredJobsService
         $this->context = $context;
         $this->jobStore = $jobStore;
         $this->storedJobSerializer = $storedJobSerializer;
-        $this->enqueuedStoredJobTrackerStore = $enqueuedStoredJobTrackerStore;
         $this->jobFlightManager = $jobFlightManager ?: new NullJobFlightManager;
         $this->setLogger($logger ?: new NullLogger);
     }
@@ -93,12 +86,15 @@ class EnqueueStoredJobsService
         if (0 === count($storedJobsToEnqueue)) {
             return $enqueuedMessagesCount;
         }
+        $this->logger->debug('Enqueueing jobs: ' . implode(',', $preBoardingJobIds));
+        $storedJobsToEnqueue = $this->jobStore->storedJobsOfIds($preBoardingJobIds);
         $producer = $this->createProducer();
         $topic = $this->createTopic($topicName);
         try {
             /** @var Message[] $messages */
             $messages = [];
             foreach ($storedJobsToEnqueue as $storedJob) {
+                $this->jobFlightManager->boarding($storedJob->id());
                 $message = $this->createMessage($storedJob);
                 $message->setMessageId($storedJob->id());
                 if ($message instanceof SqsMessage) {
@@ -121,27 +117,17 @@ class EnqueueStoredJobsService
             $this->logger->debug('[' . $uniq . '] Counting messages: ' . count($messages));
             if ($producer instanceof SqsProducer) {
                 foreach (array_chunk($messages, 10) as $i => $chunk) {
-                    $enqueuedMessagesCount = $enqueuedMessagesCount + count($chunk);
-                    $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i * 10 + count($chunk) - 1];
-                    $producer->sendAll($topic, array_column($chunk, 'message'));
-                    foreach ($chunk as $message) {
-                        $this->jobFlightManager->departed(
-                            $message['message']->getMessageId(),
-                            $message['jobName'],
-                            $topicName
-                        );
+                    $enqueuedMessageIds = $producer->sendAll($topic, array_column($chunk, 'message'));
+                    foreach ($enqueuedMessageIds as $messageId) {
+                        $this->jobFlightManager->departed($messageId);
+                        $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
                     }
                 }
             } else {
                 foreach ($messages as $i => $message) {
                     $producer->send($topic, $message['message']);
                     $enqueuedMessagesCount = $enqueuedMessagesCount + 1;
-                    $lastEnqueuedStoredJob = $storedJobsToEnqueue[$i];
-                    $this->jobFlightManager->departed(
-                        $message['message']->getMessageId(),
-                        $message['jobName'],
-                        $topicName
-                    );
+                    $this->jobFlightManager->departed($message['message']->getMessageId());
                 }
             }
         } catch (Throwable $e) {

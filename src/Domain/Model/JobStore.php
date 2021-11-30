@@ -6,8 +6,9 @@ interface JobStore
 {
     /**
      * @param Job $job
+     * @return StoredJob
      */
-    public function append(Job $job): void;
+    public function append(Job $job): StoredJob;
 
     /**
      * @param int|null $jobId
@@ -20,4 +21,10 @@ interface JobStore
      * @return null|StoredJob
      */
     public function storedJobOfId(int $jobId): ?StoredJob;
+
+    /**
+     * @param int[] $jobIds
+     * @return StoredJob[]
+     */
+    public function storedJobsOfIds(array $jobIds): array;
 }

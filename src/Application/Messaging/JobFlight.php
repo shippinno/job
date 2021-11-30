@@ -54,12 +54,27 @@ class JobFlight
     /**
      * @var DateTimeImmutable
      */
+    private $creation;
+
+    /**
+     * @var null|DateTimeImmutable
+     */
+    private $boarding;
+
+    /**
+     * @var null|DateTimeImmutable
+     */
     private $departure;
 
     /**
      * @var null|DateTimeImmutable
      */
     private $arrival;
+
+    /**
+     * @var null|DateTimeImmutable
+     */
+    private $immigration;
 
     /**
      * @var string|string
@@ -70,15 +85,17 @@ class JobFlight
      * @param int $jobId
      * @param string $jobName
      * @param string $queue
-     * @throws \Exception
      */
     public function __construct(int $jobId, string $jobName, string $queue)
     {
         $this->jobId = $jobId;
         $this->jobName = $jobName;
         $this->queue = $queue;
-        $this->departure = new DateTimeImmutable;
+        $this->creation = $this->now();
+        $this->boarding = null;
+        $this->departure = null;
         $this->arrival = null;
+        $this->immigration = null;
         $this->result = null;
     }
 
@@ -109,9 +126,33 @@ class JobFlight
     /**
      * @return void
      */
+    public function board(): void
+    {
+        $this->boarding = $this->now();
+    }
+
+    /**
+     * @return void
+     */
+    public function depart(): void
+    {
+        $this->departure = $this->now();
+    }
+
+    /**
+     * @return void
+     */
+    public function arrive(): void
+    {
+        $this->arrival = $this->now();
+    }
+
+    /**
+     * @return void
+     */
     public function acknowledge(): void
     {
-        $this->arrival = new DateTimeImmutable;
+        $this->immigration = $this->now();
         $this->result = self::RESULT_ACKNOWLEDGED;
     }
 
@@ -120,7 +161,7 @@ class JobFlight
      */
     public function abandoned(): void
     {
-        $this->arrival = new DateTimeImmutable;
+        $this->immigration = $this->now();
         $this->result = self::RESULT_ABANDONED;
     }
 
@@ -129,16 +170,16 @@ class JobFlight
      */
     public function requeued(): void
     {
-        $this->arrival = new DateTimeImmutable;
+        $this->immigration = $this->now();
         $this->result = self::RESULT_REQUEUED;
     }
 
     /**
-     * @throws void
+     * @return void
      */
     public function rejected(): void
     {
-        $this->arrival = new DateTimeImmutable;
+        $this->immigration = $this->now();
         $this->result = self::RESULT_REJECTED;
     }
 
@@ -147,7 +188,15 @@ class JobFlight
      */
     public function letGo(): void
     {
-        $this->arrival = new DateTimeImmutable;
+        $this->immigration = $this->now();
         $this->result = self::RESULT_LET_GO;
+    }
+
+    /**
+     * @return DateTimeImmutable
+     */
+    protected function now(): DateTimeImmutable
+    {
+        return new DateTimeImmutable;
     }
 }

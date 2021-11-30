@@ -22,6 +22,7 @@
     },
     "require": {
         "php": "^7.1",
+        "ext-pcntl": "*",
         "doctrine/orm": "^2.5",
         "enqueue/enqueue": "0.9.x-dev",
         "jms/serializer": "^1.11",
