@@ -21,13 +21,13 @@
         }
     },
     "require": {
-        "php": "^7.3",
+        "php": "^7.4",
         "ext-pcntl": "*",
         "doctrine/orm": "^2.5.0",
         "enqueue/enqueue": "^0.10.14",
         "jms/serializer": "^1.11.0",
-        "shippinno/sqs": "^1.0.0",
-        "symfony/yaml": "^3.4.0"
+        "shippinno/sqs": "^1.0",
+        "symfony/yaml": "^5.1.0"
     },
     "require-dev": {
         "illuminate/console": "^5.5",

@@ -1,4 +1,4 @@
-FROM php:7.3-fpm-alpine
+FROM php:7.4-fpm-alpine
 
 RUN apk update && \
     apk add --no-cache git mysql-client curl libmcrypt libmcrypt-dev openssh-client \
@@ -23,13 +23,13 @@ RUN apk update && \
 RUN docker-php-ext-install \
 #    pdo_mysql \
 #    mysqli \
-    mbstring \
+#    mbstring \
     pcntl
 
 RUN curl -sS https://getcomposer.org/installer | \
     php -- --install-dir=/usr/bin/ --filename=composer
 
-RUN echo "memory_limit = 1024M" > /usr/local/etc/php/conf.d/memory_limit.ini
+#RUN echo "memory_limit = 1024M" > /usr/local/etc/php/conf.d/memory_limit.ini
 
 # COPY ./auth.json /root/.composer/auth.json
 
