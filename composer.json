@@ -34,7 +34,7 @@
         "enqueue/enqueue": "^0.10.14",
         "jms/serializer": "^3.11.0",
         "shippinno/sqs": "dev-feature/php-version-up",
-        "symfony/yaml": "^5.1.0"
+        "symfony/yaml": "^6.0.0"
     },
     "require-dev": {
         "illuminate/console": "^5.5",
