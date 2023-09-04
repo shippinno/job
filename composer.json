@@ -20,6 +20,13 @@
             "Shippinno\\Job\\Test\\": "tests/"
         }
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:shippinno/sqs.git",
+            "no-api": true
+        }
+    ],
     "require": {
         "php": "^8.2",
         "ext-pcntl": "*",
