@@ -30,7 +30,7 @@
     "require": {
         "php": "^8.2",
         "ext-pcntl": "*",
-        "doctrine/orm": "^2.5.0",
+        "doctrine/orm": "^2.16.0||^3.0.0",
         "enqueue/enqueue": "^0.10.14",
         "jms/serializer": "^3.11.0",
         "shippinno/sqs": "dev-feature/php-version-up",
