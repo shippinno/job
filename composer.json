@@ -34,13 +34,15 @@
         "enqueue/enqueue": "^0.10.14",
         "jms/serializer": "^3.11.0",
         "shippinno/sqs": "dev-feature/php-version-up",
-        "symfony/yaml": "^6.0.0"
+        "symfony/yaml": "^6.0.0",
+        "symfony/cache": "^5.3",
+        "vlucas/phpdotenv": "^5.0"
     },
     "require-dev": {
-        "illuminate/console": "^5.5",
-        "illuminate/container": "^5.5",
+        "illuminate/console": "^9.0|^10.0",
+        "illuminate/container": "^9.0|^10.0",
         "mockery/mockery": "^1.0",
-        "phpunit/phpunit": "^7.0",
+        "phpunit/phpunit": "^7.0|^8.0",
         "squizlabs/php_codesniffer": "^3.2",
         "wmde/psr-log-test-doubles": "^2.2"
     },

@@ -7,6 +7,7 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
 use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Domain\Model\AbandonedJobMessage;
+use Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException;
 use Shippinno\Job\Domain\Model\StoredJob;
 use Shippinno\Job\Infrastructure\Domain\Model\DoctrineAbandonedJobMessageStore;
 
@@ -22,7 +23,7 @@ class DoctrineAbandonedJobMessageStoreTest extends TestCase
      */
     private $abandonedJobMessageStore;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->entityManager = $this->initEntityManager();
         $this->abandonedJobMessageStore = new DoctrineAbandonedJobMessageStore(
@@ -32,11 +33,12 @@ class DoctrineAbandonedJobMessageStoreTest extends TestCase
     }
 
     /**
-     * @expectedException \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
+     * @expectException \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
      * @expectedExceptionMessage Abandoned job message not found (1)
      */
     public function testThatExceptionThrownIfNotFound()
     {
+        $this->expectException(AbandonedJobMessageNotFoundException::class);
         $this->abandonedJobMessageStore->abandonedJobMessageOfId(1);
     }
 

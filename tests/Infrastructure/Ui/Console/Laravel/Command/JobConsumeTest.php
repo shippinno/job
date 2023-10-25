@@ -4,6 +4,7 @@ namespace Shippinno\Job\Test\Infrastructure\Ui\Console\Laravel\Command;
 
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManager;
+use LogicException;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Messaging\ConsumeStoredJobService;
@@ -11,22 +12,23 @@ use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobConsume;
 
 class JobConsumeTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         putenv('JOB_CONSUME_QUEUE=test');
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         putenv('JOB_CONSUME_QUEUE=');
     }
 
     /**
-     * @expectedException \LogicException
-     * @expectedExceptionMessage The env JOB_CONSUME_QUEUE is not defined
+     * @expectException \LogicException
+     * @expectExceptionMessage The env JOB_CONSUME_QUEUE is not defined
      */
     public function testItShouldThrowLogicExceptionIfEnvNotSet()
     {
+        $this->expectException(LogicException::class);
         putenv('JOB_CONSUME_QUEUE=');
         $jobConsume = new JobConsume(
             Mockery::mock(ConsumeStoredJobService::class),

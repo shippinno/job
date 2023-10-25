@@ -25,7 +25,7 @@ class DoctrineEnqueuedStoredJobTrackerStoreTest extends TestCase
      */
     private $enqueuedStoredJobTrackerStore;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->entityManager = $this->initEntityManager();
         $this->initSchema($this->entityManager);

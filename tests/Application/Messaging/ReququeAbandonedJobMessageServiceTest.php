@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Messaging\RequeueAbandonedJobMessageService;
 use Shippinno\Job\Domain\Model\AbandonedJobMessage;
 use Shippinno\Job\Domain\Model\AbandonedJobMessageFailedToRequeueException;
+use Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException;
 use Shippinno\Job\Domain\Model\StoredJob;
 use Shippinno\Job\Domain\Model\StoredJobSerializer;
 use Shippinno\Job\Test\Domain\Model\FakeStoredJob;
@@ -22,10 +23,11 @@ use Shippinno\Job\Test\Infrastructure\Domain\Model\InMemoryAbandonedJobMessageSt
 class ReququeAbandonedJobMessageServiceTest extends TestCase
 {
     /**
-     * @expectedException \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
+     * @expectException \Shippinno\Job\Domain\Model\AbandonedJobMessageNotFoundException
      */
     public function testThatExceptionIsThrownIfMessageNotFound()
     {
+        $this->expectException(AbandonedJobMessageNotFoundException::class);
         $context = new NullContext;
         $abandonedJobMessageStore = new InMemoryAbandonedJobMessageStore;
         $storedJobSerializer = Mockery::mock(StoredJobSerializer::class);

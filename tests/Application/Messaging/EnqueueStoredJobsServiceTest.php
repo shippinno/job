@@ -66,7 +66,7 @@ class EnqueueStoredJobsServiceTest extends TestCase
     }
 
     /**
-     * @expectedException  \Shippinno\Job\Domain\Model\FailedToEnqueueStoredJobException
+     * @expectException  \Shippinno\Job\Domain\Model\FailedToEnqueueStoredJobException
      */
     public function testIfFailedToEnqueueSecondStoredJob()
     {
@@ -121,6 +121,8 @@ class EnqueueStoredJobsServiceTest extends TestCase
                 })
             ]);
         $service = new EnqueueStoredJobsService($context, $jobStore, $storedJobSerializer, $enqueuedStoredJobTrackerStore);
+
+        $this->expectException(FailedToEnqueueStoredJobException::class);
         $service->execute('TOPIC');
     }
 

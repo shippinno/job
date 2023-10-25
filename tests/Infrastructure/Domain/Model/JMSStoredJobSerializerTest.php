@@ -24,7 +24,7 @@ class JMSStoredJobSerializerTest extends TestCase
      */
     private $storedJobSerializer;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->jobSerializer = new SimpleJobSerializer;
         $this->storedJobSerializer = new JMSStoredJobSerializer(SerializerBuilder::create());
@@ -40,7 +40,7 @@ class JMSStoredJobSerializerTest extends TestCase
         $this->assertSame(4, count($array));
         $this->assertSame(NullJob::class, $array['name']);
         $this->assertSame($body, $array['body']);
-        $this->assertSame($job->createdAt()->format(DateTime::ISO8601), $array['created_at']);
+        $this->assertSame($job->createdAt()->format(DateTime::ATOM), $array['created_at']);
         $this->assertSame($job->isExpendable(), $job->isExpendable());
     }
 

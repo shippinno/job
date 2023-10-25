@@ -25,7 +25,7 @@ class DoctrineJobStoreTest extends TestCase
      */
     private $jobStore;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->entityManager = $this->initEntityManager();
         $jobSerializer = Mockery::mock(JobSerializer::class);

@@ -5,6 +5,7 @@ namespace Shippinno\Job\Test\Infrastructure\Ui\Console\Laravel\Command;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManager;
 use Illuminate\Container\Container;
+use LogicException;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Shippinno\Job\Application\Messaging\EnqueueStoredJobsService;
@@ -16,22 +17,23 @@ use WMDE\PsrLogTestDoubles\LoggerSpy;
 
 class JobEnqueueTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         putenv('JOB_ENQUEUE_TOPIC=test');
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         putenv('JOB_ENQUEUE_TOPIC=');
     }
 
     /**
-     * @expectedException \LogicException
-     * @expectedExceptionMessage The env JOB_ENQUEUE_TOPIC is not defined
+     * @expectException \LogicException
+     * @expectExceptionMessage The env JOB_ENQUEUE_TOPIC is not defined
      */
     public function testItShouldThrowLogicExceptionIfEnvNotSet()
     {
+        $this->expectException(LogicException::class);
         putenv('JOB_ENQUEUE_TOPIC=');
         $jobEnqueue = new JobEnqueue(
             Mockery::mock(EnqueueStoredJobsService::class),

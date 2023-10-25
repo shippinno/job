@@ -49,7 +49,7 @@ class ConsumeStoredJobServiceTest extends TestCase
      */
     private $abandonedJobMessageStore;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->storedJobSerializer = new SimpleStoredJobSerializer;
         $this->jobSerializer = new SimpleJobSerializer;
