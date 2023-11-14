@@ -23,7 +23,7 @@ class NullJobFlightManager implements JobFlightManager
     /**
      * {@inheritdoc}
      */
-    public function acknowledged(int $jobId): void
+    public function acknowledged(string $jobId): void
     {
 
     }
@@ -47,7 +47,7 @@ class NullJobFlightManager implements JobFlightManager
     /**
      * {@inheritdoc}
      */
-    public function rejected(int $jobId): void
+    public function rejected(string $jobId): void
     {
 
     }

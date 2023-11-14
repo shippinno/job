@@ -12,6 +12,7 @@ use Shippinno\Job\Application\Messaging\EnqueueStoredJobsService;
 use Shippinno\Job\Domain\Model\FailedToEnqueueStoredJobException;
 use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobEnqueue;
 use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Tests\Fixtures\DummyOutput;
 use WMDE\PsrLogTestDoubles\LoggerSpy;
 
@@ -59,7 +60,7 @@ class JobEnqueueTest extends TestCase
         $logger = new LoggerSpy;
         $command = new JobEnqueue($service, null, $logger);
         $command->setLaravel(new Container);
-        $command->run(new ArrayInput([]), new DummyOutput);
+        $command->run(new ArrayInput([]), new BufferedOutput());
         $logCalls = $logger->getLogCalls()->getIterator();
         $this->assertSame(
             '3 job(s) enqueued.',
@@ -88,7 +89,7 @@ class JobEnqueueTest extends TestCase
 //        $managerRegistry->shouldReceive(['getManagers' => [$entityManager]]);
         $command = new JobEnqueue($service);
         $command->setLaravel(new Container);
-        $command->run(new ArrayInput([]), new DummyOutput);
+        $command->run(new ArrayInput([]), new BufferedOutput());
         $this->assertTrue(true);
     }
 }

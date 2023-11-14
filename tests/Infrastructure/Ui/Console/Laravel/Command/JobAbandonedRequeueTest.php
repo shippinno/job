@@ -12,6 +12,7 @@ use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobAbandonedRequeue;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Tests\Fixtures\DummyOutput;
 
 class JobAbandonedRequeueTest extends TestCase
@@ -28,7 +29,7 @@ class JobAbandonedRequeueTest extends TestCase
         $command->setLaravel(new Container);
         $inputDefinition = new InputDefinition([new InputArgument('id')]);
         $input = new ArrayInput(['id' => '1'], $inputDefinition);
-        $output = new DummyOutput;
+        $output = new BufferedOutput();
         $command->run($input, $output);
         $this->assertTrue(true);
     }

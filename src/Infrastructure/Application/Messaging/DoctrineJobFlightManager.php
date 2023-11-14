@@ -28,7 +28,7 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
     /**
      * {@inheritdoc}
      */
-    public function acknowledged(int $jobId): void
+    public function acknowledged(string $jobId): void
     {
         $jobFlight = $this->latestJobFlightOfJobId($jobId);
         if (!is_null($jobFlight)) {
@@ -65,7 +65,7 @@ class DoctrineJobFlightManager extends EntityRepository implements JobFlightMana
     /**
      * {@inheritdoc}
      */
-    public function rejected(int $jobId): void
+    public function rejected(string $jobId): void
     {
         $jobFlight = $this->latestJobFlightOfJobId($jobId);
         if (!is_null($jobFlight)) {

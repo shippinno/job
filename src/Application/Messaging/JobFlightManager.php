@@ -18,9 +18,9 @@ interface JobFlightManager
     public function latestJobFlightOfJobId(int $jobId): ?JobFlight;
 
     /**
-     * @param int $jobId
+     * @param string $jobId
      */
-    public function acknowledged(int $jobId): void;
+    public function acknowledged(string $jobId): void;
 
     /**
      * @param int $jobId
@@ -33,9 +33,9 @@ interface JobFlightManager
     public function requeued(string $jobId): void;
 
     /**
-     * @param int $jobId
+     * @param string $jobId
      */
-    public function rejected(int $jobId): void;
+    public function rejected(string $jobId): void;
 
     /**
      * @param int $jobId
