@@ -35,7 +35,7 @@
         "jms/serializer": "^3.11.0",
         "shippinno/sqs": "dev-feature/php-version-up",
         "symfony/yaml": "^6.0.0",
-        "symfony/cache": "^5.3",
+        "symfony/cache": "^6.0|^7.0",
         "vlucas/phpdotenv": "^5.0"
     },
     "require-dev": {
