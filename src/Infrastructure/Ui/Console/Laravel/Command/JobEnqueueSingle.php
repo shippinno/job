@@ -2,7 +2,7 @@
 
 namespace Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use Illuminate\Console\Command;
 use LogicException;
 use Psr\Log\LoggerAwareTrait;

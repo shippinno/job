@@ -2,8 +2,8 @@
 
 namespace Shippinno\Job\Infrastructure\Persistence\Doctrine;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManager;
+use Doctrine\Persistence\ManagerRegistry;
 
 trait ManagerRegistryAwareTrait
 {

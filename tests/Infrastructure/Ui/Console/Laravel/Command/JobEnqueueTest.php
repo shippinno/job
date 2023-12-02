@@ -2,8 +2,7 @@
 
 namespace Shippinno\Job\Test\Infrastructure\Ui\Console\Laravel\Command;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Persistence\ManagerRegistry;
 use Illuminate\Container\Container;
 use LogicException;
 use Mockery;
@@ -13,7 +12,6 @@ use Shippinno\Job\Domain\Model\FailedToEnqueueStoredJobException;
 use Shippinno\Job\Infrastructure\Ui\Console\Laravel\Command\JobEnqueue;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
-use Symfony\Component\Console\Tests\Fixtures\DummyOutput;
 use WMDE\PsrLogTestDoubles\LoggerSpy;
 
 class JobEnqueueTest extends TestCase
@@ -59,7 +57,9 @@ class JobEnqueueTest extends TestCase
 //        $managerRegistry->shouldReceive(['getManagers' => [$entityManager]]);
         $logger = new LoggerSpy;
         $command = new JobEnqueue($service, null, $logger);
-        $command->setLaravel(new Container);
+        $container = Mockery::mock(Container::class)->makePartial();
+        $container->shouldReceive('runningUnitTests')->andReturn(true);
+        $command->setLaravel($container);
         $command->run(new ArrayInput([]), new BufferedOutput());
         $logCalls = $logger->getLogCalls()->getIterator();
         $this->assertSame(
@@ -88,7 +88,9 @@ class JobEnqueueTest extends TestCase
 //        $managerRegistry = Mockery::mock(ManagerRegistry::class);
 //        $managerRegistry->shouldReceive(['getManagers' => [$entityManager]]);
         $command = new JobEnqueue($service);
-        $command->setLaravel(new Container);
+        $container = Mockery::mock(Container::class)->makePartial();
+        $container->shouldReceive('runningUnitTests')->andReturn(true);
+        $command->setLaravel($container);
         $command->run(new ArrayInput([]), new BufferedOutput());
         $this->assertTrue(true);
     }

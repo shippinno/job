@@ -2,8 +2,8 @@
 
 namespace Shippinno\Job\Test\Infrastructure\Ui\Console\Laravel\Command;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManager;
+use Doctrine\Persistence\ManagerRegistry;
 use Illuminate\Container\Container;
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -13,7 +13,6 @@ use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Output\BufferedOutput;
-use Symfony\Component\Console\Tests\Fixtures\DummyOutput;
 
 class JobAbandonedRequeueTest extends TestCase
 {
@@ -26,7 +25,9 @@ class JobAbandonedRequeueTest extends TestCase
         $service = Mockery::mock(RequeueAbandonedJobMessageService::class);
         $service->shouldReceive('execute')->once()->withArgs([1]);
         $command = new JobAbandonedRequeue($service);
-        $command->setLaravel(new Container);
+        $container = Mockery::mock(Container::class)->makePartial();
+        $container->shouldReceive('runningUnitTests')->andReturn(true);
+        $command->setLaravel($container);
         $inputDefinition = new InputDefinition([new InputArgument('id')]);
         $input = new ArrayInput(['id' => '1'], $inputDefinition);
         $output = new BufferedOutput();

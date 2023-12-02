@@ -2,8 +2,7 @@
 
 namespace Shippinno\Job\Test\Infrastructure\Ui\Console\Laravel\Command;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Persistence\ManagerRegistry;
 use LogicException;
 use Mockery;
 use PHPUnit\Framework\TestCase;
